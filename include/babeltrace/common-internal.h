@@ -1,8 +1,9 @@
-#ifndef BABELTRACE_COMMON_INTERNAL_H
+	#ifndef BABELTRACE_COMMON_INTERNAL_H
 #define BABELTRACE_COMMON_INTERNAL_H
 
 #include <stdbool.h>
 #include <babeltrace/babeltrace-internal.h>
+#include <strace2ds.h>
 
 #define BT_COMMON_COLOR_RESET              "\033[0m"
 #define BT_COMMON_COLOR_BOLD               "\033[1m"
@@ -32,6 +33,18 @@ struct bt_common_lttng_live_url_parts {
 	/* -1 means default port */
 	int port;
 };
+
+BT_HIDDEN
+void bt_common_init_dataseries();
+
+BT_HIDDEN
+void bt_common_write_record(DataSeriesOutputModule *ds_module,
+			    const char *extent_name,
+			    long *args,
+			    void *common_fields[DS_NUM_COMMON_FIELDS],
+			    void **v_args);
+BT_HIDDEN
+void bt_common_destroy_module();
 
 /*
  * Checks if the current process has setuid or setgid access rights.

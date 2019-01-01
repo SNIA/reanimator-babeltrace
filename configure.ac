@@ -660,15 +660,15 @@ AC_SUBST(LIBDIR)
 
 
 # Set global CFLAGS in AM_CFLAGS
-AM_CFLAGS="-Wall -Wformat $PTHREAD_CFLAGS $GLIB_CFLAGS"
+AM_CFLAGS="-Wall -Wformat $PTHREAD_CFLAGS $GLIB_CFLAGS -L\$(STRACE2DS)/lib/"
 AC_SUBST(AM_CFLAGS)
 
 # Set global CPPFLAGS in AM_CPPFLAGS
-AM_CPPFLAGS="-I\$(top_builddir)/include -I\$(top_srcdir)/include -include config.h"
+AM_CPPFLAGS="-I\$(top_builddir)/include -I\$(top_srcdir)/include -I\$(STRACE2DS)/include -include config.h"
 AC_SUBST(AM_CPPFLAGS)
 
 # Add glib to global link libs
-LIBS="$LIBS $GLIB_LIBS"
+LIBS="$LIBS $GLIB_LIBS -lstrace2ds"
 
 # Check that the current size_t matches the size that glib thinks it should
 # be. This catches problems on multi-arch where people try to do a 32-bit

@@ -45,6 +45,9 @@
 #include "babeltrace-cfg-cli-args.h"
 #include "babeltrace-cfg-cli-args-default.h"
 
+#include <utime.h>
+#include <limits.h>
+
 #define ENV_BABELTRACE_WARN_COMMAND_NAME_DIRECTORY_CLASH "BABELTRACE_CLI_WARN_COMMAND_NAME_DIRECTORY_CLASH"
 #define ENV_BABELTRACE_CLI_LOG_LEVEL "BABELTRACE_CLI_LOG_LEVEL"
 #define NSEC_PER_SEC	1000000000LL
@@ -2887,6 +2890,8 @@ int main(int argc, const char **argv)
 	BT_LOGI("Executing command: cmd=%d, command-name=\"%s\"",
 		cfg->command, cfg->command_name);
 
+	bt_common_init_dataseries();
+
 	switch (cfg->command) {
 	case BT_CONFIG_COMMAND_RUN:
 		ret = cmd_run(cfg);
@@ -2917,6 +2922,7 @@ int main(int argc, const char **argv)
 	retcode = ret ? 1 : 0;
 
 end:
+	bt_common_destroy_module();
 	BT_PUT(cfg);
 	fini_static_data();
 	return retcode;

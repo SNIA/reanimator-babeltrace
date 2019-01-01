@@ -25,6 +25,7 @@ test_dwarf_LDADD = \
 	$(top_builddir)/common/libbabeltrace-common.la \
 	$(ELFUTILS_LIBS) \
 	$(LIBTAP)
+
 test_dwarf_SOURCES = test_dwarf.c
 
 test_bin_info_LDADD = \
@@ -33,6 +34,8 @@ test_bin_info_LDADD = \
 	$(top_builddir)/common/libbabeltrace-common.la \
 	$(ELFUTILS_LIBS) \
 	$(LIBTAP)
+#    $(STRACE2DS)/lib/libstrace2ds.la
+
 test_bin_info_SOURCES = test_bin_info.c
 
 noinst_PROGRAMS += test_dwarf test_bin_info

@@ -48,6 +48,8 @@
 char *opt_debug_info_dir;
 char *opt_debug_info_target_prefix;
 
+unsigned nsyscalls = 400;
+
 static
 void test_bin_info_build_id(const char *data_dir)
 {

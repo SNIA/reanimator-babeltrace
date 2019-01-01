@@ -77,7 +77,7 @@ endif
 endif
 
 if BABELTRACE_BUILD_WITH_MINGW
-babeltrace_bin_LDADD += -lws2_32 -lrpcrt4 -lintl -liconv -lole32 -lpthread
+babeltrace_bin_LDADD += -lws2_32 -lrpcrt4 -lintl -liconv -lole32 -lpthread -lstrace2ds
 endif
 
 # Only used for in-tree execution and tests

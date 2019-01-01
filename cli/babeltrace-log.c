@@ -29,6 +29,8 @@
 #include <popt.h>
 #include <glib.h>
 
+int nsyscalls = 400;
+
 static
 void print_usage(FILE *fp)
 {

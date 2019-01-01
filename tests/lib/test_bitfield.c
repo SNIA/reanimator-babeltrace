@@ -28,6 +28,8 @@
 
 unsigned int glob;
 
+int nsyscalls = 400;
+
 /*
  * This function is only declared to show the size of a bitfield write in
  * objdump.

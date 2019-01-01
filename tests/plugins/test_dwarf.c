@@ -30,6 +30,8 @@
 
 #define NR_TESTS 15
 
+unsigned nsyscalls = 400;
+
 static
 void test_bt_dwarf(const char *data_dir)
 {
