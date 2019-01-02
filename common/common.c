@@ -272,7 +272,7 @@ DataSeriesOutputModule *ds_module;
 
 BT_HIDDEN
 void bt_common_init_dataseries(void) {
-	char *ds_fname = "/root/lttng/lttng.ds";
+	char *ds_fname = "/tmp/lttng.ds";
 	if (ds_fname) {
 		char tab_path[MAXPATHLEN] = {0}, xml_path[MAXPATHLEN] = {0};
 		const char *ds_top = getenv("STRACE2DS");

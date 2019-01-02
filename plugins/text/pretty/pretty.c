@@ -262,7 +262,10 @@ static inline void print_key_value() {
 		entry_args[2] = swap;
 		if (value[4] == 0)
 			value[4] = swap;
-	} else {
+	} else if (strcmp(sys_name, "clone") == 0) {
+		v_args[0] = value[3];
+                v_args[1] = value[4];
+        } else {
 		v_args[0] = NULL;
 	}
 
