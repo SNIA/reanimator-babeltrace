@@ -238,15 +238,16 @@ static inline void print_key_value() {
 
         ////////////////////////////////////////////////////////
         if (strcmp(sys_name, "sendto") == 0 ||
-            strcmp(sys_name, "recvfrom") == 0 || 
+	    strcmp(sys_name, "recvfrom") == 0 || 
 	    strcmp(sys_name, "sendmsg") == 0 || 
 	    strcmp(sys_name, "recvmsg") == 0 || 
-	    strcmp(sys_name, "connect") == 0 || 
+	    strcmp(sys_name, "connect") == 0 ||
+	    strcmp(sys_name, "bind") == 0 ||
 	    strcmp(sys_name, "getrlimit") == 0 || 
-            strcmp(sys_name, "execve") == 0 ||
-            strcmp(sys_name, "unknown") == 0 ||
-            strcmp(sys_name, "getdents") == 0 ||
-            strcmp(sys_name, "readlink") == 0) {
+	    strcmp(sys_name, "execve") == 0 ||
+	    strcmp(sys_name, "unknown") == 0 ||
+	    strcmp(sys_name, "getdents") == 0 ||
+	    strcmp(sys_name, "readlink") == 0) {
 		key_cnt = 0;
 		val_cnt = 0;
                 return;
@@ -263,11 +264,16 @@ static inline void print_key_value() {
 		if (value[4] == 0)
 			value[4] = swap;
 	} else if (strcmp(sys_name, "clone") == 0) {
-		v_args[0] = value[3];
-                v_args[1] = value[4];
-        } else {
+		v_args[0] = &value[3];
+                v_args[1] = &value[4];
+        } else if (strcmp(sys_name, "open") == 0 ||
+		   strcmp(sys_name, "access") == 0 ||
+		   strcmp(sys_name, "stat") == 0 ||
+		   strcmp(sys_name, "statfs") == 0) {
+		v_args[0] = &backup_value[4];
+	} else {
 		v_args[0] = NULL;
-	}
+        }
 
 	printf(" %s entry time %ld exit time %ld retVal %ld tid %ld\n", 
 	       sys_name, backup_value[0], value[0], value[4], value[3]);
@@ -275,7 +281,7 @@ static inline void print_key_value() {
 	/* 	printf("params[%d] = %ld\n", i, entry_args[i]); */
 	/* } */
 	bt_common_write_record(ds_module, sys_name, entry_args, common_fields, v_args);
-	
+
 	/* Reset counts */
 	key_cnt = 0;
 	val_cnt = 0;

@@ -1294,6 +1294,8 @@ end:
 	return ret;
 }
 
+static char copy_str[512] = "";
+
 static
 enum bt_component_status print_field(struct pretty_component *pretty,
 		struct bt_field *field, bool print_names,
@@ -1333,7 +1335,9 @@ enum bt_component_status print_field(struct pretty_component *pretty,
 		if (!str) {
 			return BT_COMPONENT_STATUS_ERROR;
 		}
-
+                memset(copy_str, 0, 512);
+                strcpy(copy_str, str);
+                value[val_cnt++] = (uint64_t)&copy_str[0];
 		if (pretty->use_colors) {
 			g_string_append(pretty->string, COLOR_STRING_VALUE);
 		}
