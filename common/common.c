@@ -38,7 +38,6 @@
 #include <babeltrace/babeltrace-internal.h>
 #include <babeltrace/common-internal.h>
 #include <babeltrace/compat/unistd-internal.h>
-#include <strace2ds.h>
 
 #ifndef __MINGW32__
 #include <pwd.h>
@@ -265,48 +264,6 @@ bool isarealtty(int fd)
 
 end:
 	return istty;
-}
-
-DataSeriesOutputModule *ds_module;
-#define	MAXPATHLEN	200
-
-BT_HIDDEN
-void bt_common_init_dataseries(void) {
-	char *ds_fname = "/tmp/lttng.ds";
-	if (ds_fname) {
-		char tab_path[MAXPATHLEN] = {0}, xml_path[MAXPATHLEN] = {0};
-		const char *ds_top = getenv("STRACE2DS");
-		if (!ds_top)
-			ds_top = "/usr/local/strace2ds";
-		snprintf(tab_path, MAXPATHLEN, "%s/%s", ds_top,
-			 "tables/snia_syscall_fields.table");
-		snprintf(xml_path, MAXPATHLEN, "%s/%s", ds_top,
-			 "xml/");
-		ds_module = ds_create_module(ds_fname, tab_path, xml_path);
-		if (!ds_module)
-			printf("create_ds_module failed"
-					   "fname=\"%s\" table_path=\"%s\" "
-					   "xml_path=\"%s\" ",
-					   ds_fname, tab_path, xml_path);
-	}
-
-}
-
-
-BT_HIDDEN
-void bt_common_write_record(DataSeriesOutputModule *ds_module,
-			    const char *extent_name,
-			    long *args,
-			    void *common_fields[DS_NUM_COMMON_FIELDS],
-			    void **v_args) {
-  int syscallNum = -100;
-  common_fields[DS_COMMON_FIELD_SYSCALL_NUM] = &syscallNum;
-  ds_write_record(ds_module, extent_name, args, common_fields, v_args);
-}
-
-BT_HIDDEN
-void bt_common_destroy_module() {
-  ds_destroy_module(ds_module);
 }
 
 BT_HIDDEN
