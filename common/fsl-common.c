@@ -1,24 +1,24 @@
 // Copyright 2019 FSL Stony Brook University
 
+#include <limits.h>
 #include <babeltrace/babeltrace-internal.h>
 #include <babeltrace/fsl-common-internal.h>
 #include <babeltrace/compat/unistd-internal.h>
 
 DataSeriesOutputModule *ds_module;
-#define	MAXPATHLEN	200
 
 BT_HIDDEN
 void bt_common_init_dataseries(void)
 {
 	char *ds_fname = "/tmp/lttng.ds";
 	if (ds_fname) {
-		char tab_path[MAXPATHLEN] = {0}, xml_path[MAXPATHLEN] = {0};
+		char tab_path[PATH_MAX] = {0}, xml_path[PATH_MAX] = {0};
 		const char *ds_top = getenv("STRACE2DS");
 		if (!ds_top)
 			ds_top = "/usr/local/strace2ds";
-		snprintf(tab_path, MAXPATHLEN, "%s/%s", ds_top,
+		snprintf(tab_path, PATH_MAX, "%s/%s", ds_top,
 			 "tables/snia_syscall_fields.table");
-		snprintf(xml_path, MAXPATHLEN, "%s/%s", ds_top, "xml/");
+		snprintf(xml_path, PATH_MAX, "%s/%s", ds_top, "xml/");
 		ds_module = ds_create_module(ds_fname, tab_path, xml_path);
 		if (!ds_module)
 			printf("create_ds_module failed"

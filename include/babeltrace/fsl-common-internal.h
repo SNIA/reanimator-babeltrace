@@ -1,5 +1,8 @@
 // Copyright 2019 FSL Stony Brook University
 
+#ifndef FSL_COMMON_INTERNAL
+#define FSL_COMMON_INTERNAL
+
 #include <stdbool.h>
 #include <babeltrace/babeltrace-internal.h>
 #include <strace2ds.h>
@@ -16,3 +19,4 @@ void bt_common_write_record(DataSeriesOutputModule *ds_module,
 BT_HIDDEN
 void bt_common_destroy_module();
 
+#endif

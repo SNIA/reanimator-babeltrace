@@ -6,7 +6,5 @@ noinst_LTLIBRARIES = libbabeltrace-plugin-text-pretty-cc.la
 libbabeltrace_plugin_text_pretty_cc_la_SOURCES = \
 	pretty.c \
 	print.c \
+	fsl-pretty.c \
 	pretty.h
-
-# libbabeltrace_plugin_text_pretty_cc_la_LIBADD = \
-#	$(STRACE2DS)/lib/libstrace2ds.la
