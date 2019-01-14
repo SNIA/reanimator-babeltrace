@@ -1,8 +1,11 @@
 // Copyright FSL Stony Brook University
 
+#include <babeltrace/babeltrace.h>
+#include <babeltrace/bitfield-internal.h>
+#include <babeltrace/common-internal.h>
+#include <babeltrace/compat/time-internal.h>
 #include <stdio.h>
 #include <string.h>
-#include <babeltrace/fsl-common-internal.h>
 #include "fsl-pretty.h"
 
 /* Array to store key of a filed in trace event record */
@@ -27,34 +30,28 @@ char fakeBuffer[8192];
 
 extern DataSeriesOutputModule *ds_module;
 
-static int is_tracepoint_entry(char *arr)
+static int is_tracepoint_entry(char *arr);
+static void get_sys_name(char *in_buf, char *out_buf);
+static void backup_entry_params();
+#ifdef FSL_PRETTY_VERBOSE
+static void print_keys_dbg();
+#endif
+
+__attribute__((always_inline)) inline void
+get_timestamp(struct bt_clock_value *clock_value)
 {
-	if (arr[TRACEPOINT_ENTRY_INDEX] == 'n')
-		return 0;
-	return 1;
+	uint64_t timestamp = 0; /* Add timestamp to the key value store */
+	bt_clock_value_get_value(clock_value, &timestamp);
+	strcpy(key[key_cnt++], "Timestamp");
+	value[val_cnt++] = timestamp;
 }
 
-static void get_sys_name(char *in_buf, char *out_buf)
+__attribute__((always_inline)) inline void
+get_syscall_name(const char *syscall_name)
 {
-	int offset = SYSCALL_NAME_EXIT_INDEX, i;
-	for (i = 0; in_buf[i + offset] != '\0'; ++i) {
-		out_buf[i] = in_buf[i + offset];
-	}
-	out_buf[i] = '\0';
-}
-
-static void backup_entry_params()
-{
-	backup_key_cnt = key_cnt;
-	for (int i = 0; i < 100; ++i) {
-		for (int j = 0; j < 40; ++j) {
-			backup_key[i][j] = key[i][j];
-		}
-	}
-	backup_val_cnt = val_cnt;
-	for (int i = 0; i < 100; ++i) {
-		backup_value[i] = value[i];
-	}
+	/* Add syscall name entry/exit here */
+	strcpy(key[key_cnt++], syscall_name);
+	value[val_cnt++] = 0;
 }
 
 __attribute__((always_inline)) inline void print_key_value()
@@ -73,27 +70,13 @@ __attribute__((always_inline)) inline void print_key_value()
 	// exit.
 	if (is_entry == SYSCALL_ENTRY) {
 		backup_entry_params();
-		/* printf("--------------------------------------------------------\n");
-		 */
-		/* for (int i = 0; i < key_cnt; ++i) { */
-		/*   printf("{ key : %s , value : %ld }\n", key[i], value[i]);
-		 */
-		/* } */
-		/* printf("--------------------------------------------------------\n");
-		 */
-
+		// print_keys_dbg();
 		/* Reset counts */
 		key_cnt = 0;
 		val_cnt = 0;
 		return;
 	}
-	/* printf("--------------------------------------------------------\n");
-	 */
-	/* for (int i = 0; i < key_cnt; ++i) { */
-	/* 	printf("{ key : %s , value : %ld }\n", key[i], value[i]); */
-	/* } */
-	/* printf("--------------------------------------------------------\n");
-	 */
+	// print_keys_dbg();
 
 	// exit
 	// create user arguents
@@ -164,3 +147,44 @@ __attribute__((always_inline)) inline void print_key_value()
 	key_cnt = 0;
 	val_cnt = 0;
 }
+
+static int is_tracepoint_entry(char *arr)
+{
+	if (arr[TRACEPOINT_ENTRY_INDEX] == 'n')
+		return 0;
+	return 1;
+}
+
+static void get_sys_name(char *in_buf, char *out_buf)
+{
+	int offset = SYSCALL_NAME_EXIT_INDEX, i;
+	for (i = 0; in_buf[i + offset] != '\0'; ++i) {
+		out_buf[i] = in_buf[i + offset];
+	}
+	out_buf[i] = '\0';
+}
+
+static void backup_entry_params()
+{
+	backup_key_cnt = key_cnt;
+	for (int i = 0; i < 100; ++i) {
+		for (int j = 0; j < 40; ++j) {
+			backup_key[i][j] = key[i][j];
+		}
+	}
+	backup_val_cnt = val_cnt;
+	for (int i = 0; i < 100; ++i) {
+		backup_value[i] = value[i];
+	}
+}
+
+#ifdef FSL_PRETTY_VERBOSE
+static void print_keys_dbg()
+{
+	printf("--------------------------------------------------------\n");
+	for (int i = 0; i < key_cnt; ++i) {
+		printf("{ key : %s , value : %ld }\n", key[i], value[i]);
+	}
+	printf("--------------------------------------------------------\n");
+}
+#endif

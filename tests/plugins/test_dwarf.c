@@ -30,7 +30,7 @@
 
 #define NR_TESTS 15
 
-unsigned nsyscalls = 400;
+unsigned nsyscalls = BT_FSL_SYSCALL_COUNT;
 
 static
 void test_bt_dwarf(const char *data_dir)

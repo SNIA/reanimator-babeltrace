@@ -34,6 +34,7 @@
 #include <inttypes.h>
 #include <ctype.h>
 #include "pretty.h"
+#include "fsl-pretty.h"
 
 #define NSEC_PER_SEC 1000000000LL
 
@@ -139,6 +140,8 @@ void print_timestamp_wall(struct pretty_component *pretty,
 		g_string_append(pretty->string, "Error");
 		return;
 	}
+
+        get_timestamp(clock_value);
 
 	if (pretty->last_real_timestamp != -1ULL) {
 		pretty->delta_real_timestamp = ts_nsec - pretty->last_real_timestamp;
@@ -289,12 +292,6 @@ enum bt_component_status print_event_timestamp(struct pretty_component *pretty,
 	} else {
 		struct bt_clock_value *clock_value =
 			bt_event_get_clock_value(event, clock_class);
-
-		/* Add timestamp to the key value store */
-		uint64_t timestamp = 0;
-		bt_clock_value_get_value(clock_value, &timestamp);
-		strcpy(key[key_cnt++], "Timestamp");
-		value[val_cnt++] = timestamp;
 		print_timestamp_wall(pretty, clock_value);
 		bt_put(clock_value);
 	}
@@ -359,6 +356,7 @@ enum bt_component_status print_event_header(struct pretty_component *pretty,
 	struct bt_stream_class *stream_class = NULL;
 	struct bt_trace *trace_class = NULL;
 	int dom_print = 0;
+        const char *syscall_name;
 
 	event_class = bt_event_get_class(event);
 	if (!event_class) {
@@ -567,11 +565,10 @@ enum bt_component_status print_event_header(struct pretty_component *pretty,
 	if (pretty->use_colors) {
 		g_string_append(pretty->string, COLOR_EVENT_NAME);
 	}
-	g_string_append(pretty->string, bt_event_class_get_name(event_class));
+	syscall_name = bt_event_class_get_name(event_class);
+	g_string_append(pretty->string, syscall_name);
 
-	/* Add syscall name entry/exit here */
-	strcpy(key[key_cnt++], (char *)bt_event_class_get_name(event_class));
-	value[val_cnt++] = 0;
+	get_syscall_name(syscall_name);
 
 	if (pretty->use_colors) {
 		g_string_append(pretty->string, COLOR_RST);

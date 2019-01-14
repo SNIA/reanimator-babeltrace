@@ -29,7 +29,7 @@
 #include <popt.h>
 #include <glib.h>
 
-int nsyscalls = 400;
+int nsyscalls = BT_FSL_SYSCALL_COUNT;
 
 static
 void print_usage(FILE *fp)

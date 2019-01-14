@@ -35,7 +35,7 @@ void bt_common_write_record(DataSeriesOutputModule *ds_module,
 			    void *common_fields[DS_NUM_COMMON_FIELDS],
 			    void **v_args)
 {
-	int syscallNum = -100;
+	int syscallNum = BT_FSL_SYSCALL_NUM;
 	common_fields[DS_COMMON_FIELD_SYSCALL_NUM] = &syscallNum;
 	ds_write_record(ds_module, extent_name, args, common_fields, v_args);
 }

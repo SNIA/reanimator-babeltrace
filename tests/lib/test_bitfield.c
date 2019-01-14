@@ -19,6 +19,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <babeltrace/types.h>
 #include <babeltrace/bitfield-internal.h>
 #include <time.h>
 #include <stdlib.h>
@@ -28,7 +29,7 @@
 
 unsigned int glob;
 
-int nsyscalls = 400;
+int nsyscalls = BT_FSL_SYSCALL_COUNT;
 
 /*
  * This function is only declared to show the size of a bitfield write in

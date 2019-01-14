@@ -30,7 +30,7 @@
 #include <babeltrace/types.h>
 #include <stdlib.h>
 
-unsigned nsyscalls = 400;
+unsigned nsyscalls = BT_FSL_SYSCALL_COUNT;
 
 int bt_version_get_major(void)
 {

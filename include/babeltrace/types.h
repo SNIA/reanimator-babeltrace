@@ -46,6 +46,10 @@ This header contains custom type definitions used across the library.
 @{
 */
 
+/// FSL strace2ds project specific values
+#define BT_FSL_SYSCALL_NUM	-100
+#define BT_FSL_SYSCALL_COUNT	400
+
 /// False boolean value for the #bt_bool type.
 #define BT_FALSE	0
 

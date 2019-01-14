@@ -126,8 +126,7 @@ void pretty_finalize(struct bt_private_component *component)
 	destroy_pretty_data(data);
 }
 
-__attribute__((always_inline))
-static inline
+static
 enum bt_component_status handle_notification(struct pretty_component *pretty,
 		struct bt_notification *notification)
 {
