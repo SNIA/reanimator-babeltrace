@@ -28,6 +28,8 @@ long int entry_args[10];
 void *v_args[DS_MAX_ARGS];
 char fakeBuffer[8192];
 
+static char copy_str[512] = "";
+
 extern DataSeriesOutputModule *ds_module;
 
 static int is_tracepoint_entry(char *arr);
@@ -40,7 +42,7 @@ static void print_keys_dbg();
 __attribute__((always_inline)) inline void
 get_timestamp(struct bt_clock_value *clock_value)
 {
-	uint64_t timestamp = 0; /* Add timestamp to the key value store */
+	uint64_t timestamp = 0;
 	bt_clock_value_get_value(clock_value, &timestamp);
 	strcpy(key[key_cnt++], "Timestamp");
 	value[val_cnt++] = timestamp;
@@ -49,9 +51,31 @@ get_timestamp(struct bt_clock_value *clock_value)
 __attribute__((always_inline)) inline void
 get_syscall_name(const char *syscall_name)
 {
-	/* Add syscall name entry/exit here */
 	strcpy(key[key_cnt++], syscall_name);
 	value[val_cnt++] = 0;
+}
+
+__attribute__((always_inline)) inline void get_integer_field(char *key_,
+							     uint64_t value_)
+{
+	strcpy(key[key_cnt++], key_);
+	value[val_cnt++] = value_;
+}
+
+__attribute__((always_inline)) inline void get_double_field(char *key_,
+							    double value_)
+{
+	strcpy(key[key_cnt++], key_);
+	value[val_cnt++] = (uint64_t)value_;
+}
+
+__attribute__((always_inline)) inline void get_string_field(char *key_,
+							    const char *value_)
+{
+	strcpy(key[key_cnt++], key_);
+	memset(copy_str, 0, 512);
+	strcpy(copy_str, value_);
+	value[val_cnt++] = (uint64_t)&copy_str[0];
 }
 
 __attribute__((always_inline)) inline void print_key_value()

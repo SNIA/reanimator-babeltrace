@@ -48,13 +48,7 @@
 #define COLOR_EVENT_NAME	BT_COMMON_COLOR_BOLD BT_COMMON_COLOR_FG_MAGENTA
 #define COLOR_TIMESTAMP		BT_COMMON_COLOR_BOLD BT_COMMON_COLOR_FG_YELLOW
 
-
-/* Array to store key of a filed in trace event record */
-extern char key[100][40];
-extern uint64_t key_cnt;
-/* Array to store value of a field in trace event record */
-extern uint64_t value[100];
-extern uint64_t val_cnt;
+char fsl_field_name[40];
 
 struct timestamp {
 	int64_t real_timestamp;	/* Relative to UNIX epoch. */
@@ -141,7 +135,7 @@ void print_timestamp_wall(struct pretty_component *pretty,
 		return;
 	}
 
-        get_timestamp(clock_value);
+	get_timestamp(clock_value);
 
 	if (pretty->last_real_timestamp != -1ULL) {
 		pretty->delta_real_timestamp = ts_nsec - pretty->last_real_timestamp;
@@ -356,7 +350,7 @@ enum bt_component_status print_event_header(struct pretty_component *pretty,
 	struct bt_stream_class *stream_class = NULL;
 	struct bt_trace *trace_class = NULL;
 	int dom_print = 0;
-        const char *syscall_name;
+	const char *syscall_name;
 
 	event_class = bt_event_get_class(event);
 	if (!event_class) {
@@ -615,11 +609,13 @@ enum bt_component_status print_integer(struct pretty_component *pretty,
 			ret = BT_COMPONENT_STATUS_ERROR;
 			goto end;
 		}
+		get_integer_field(fsl_field_name, v.u);
 	} else {
 		if (bt_field_signed_integer_get_value(field, &v.s) < 0) {
 			ret = BT_COMPONENT_STATUS_ERROR;
 			goto end;
 		}
+		get_integer_field(fsl_field_name, (uint64_t)v.s);
 	}
 
 	encoding = bt_field_type_integer_get_encoding(field_type);
@@ -639,13 +635,6 @@ enum bt_component_status print_integer(struct pretty_component *pretty,
 	if (pretty->use_colors) {
 		g_string_append(pretty->string, COLOR_NUMBER_VALUE);
 		rst_color = true;
-	}
-
-	/* Integer value here */
-	if (!signedness) {
-		value[val_cnt++] = (uint64_t)v.u;
-	} else {
-		value[val_cnt++] = (uint64_t)v.s;
 	}
 
 	base = bt_field_type_integer_get_base(field_type);
@@ -927,7 +916,8 @@ enum bt_component_status print_struct_field(struct pretty_component *pretty,
 	enum bt_component_status ret = BT_COMPONENT_STATUS_OK;
 	const char *field_name;
 	struct bt_field *field = NULL;
-	struct bt_field_type *field_type = NULL;;
+	struct bt_field_type *field_type = NULL;
+        memset(fsl_field_name, 40, sizeof(char));
 
 	field = bt_field_structure_get_field_by_index(_struct, i);
 	if (!field) {
@@ -953,8 +943,7 @@ enum bt_component_status print_struct_field(struct pretty_component *pretty,
 	}
 	if (print_names) {
 		print_field_name_equal(pretty, field_name);
-		/* Add field name here */
-		strcpy(key[key_cnt++], field_name);
+		strcpy(fsl_field_name, field_name);
 	}
 	ret = print_field(pretty, field, print_names, NULL, 0);
 	*nr_printed_fields += 1;
@@ -1291,8 +1280,6 @@ end:
 	return ret;
 }
 
-static char copy_str[512] = "";
-
 static
 enum bt_component_status print_field(struct pretty_component *pretty,
 		struct bt_field *field, bool print_names,
@@ -1315,8 +1302,7 @@ enum bt_component_status print_field(struct pretty_component *pretty,
 			g_string_append(pretty->string, COLOR_NUMBER_VALUE);
 		}
 		g_string_append_printf(pretty->string, "%g", v);
-		/* Float value here */
-		value[val_cnt++] = (uint64_t)v;
+		get_double_field(fsl_field_name, v);
 		if (pretty->use_colors) {
 			g_string_append(pretty->string, COLOR_RST);
 		}
@@ -1332,9 +1318,7 @@ enum bt_component_status print_field(struct pretty_component *pretty,
 		if (!str) {
 			return BT_COMPONENT_STATUS_ERROR;
 		}
-                memset(copy_str, 0, 512);
-                strcpy(copy_str, str);
-                value[val_cnt++] = (uint64_t)&copy_str[0];
+                get_string_field(fsl_field_name, str);
 		if (pretty->use_colors) {
 			g_string_append(pretty->string, COLOR_STRING_VALUE);
 		}
