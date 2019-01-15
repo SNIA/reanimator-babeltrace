@@ -5,10 +5,12 @@
 
 #include <babeltrace/ctf-ir/clock-value-internal.h>
 
-#define TRACEPOINT_ENTRY_INDEX 9
 #define SYSCALL_NAME_ENTRY_INDEX 14
 #define SYSCALL_NAME_EXIT_INDEX 13
 #define DS_MAX_ARGS 10
+
+#define PARAMETER_COUNT 100
+#define KEY_LENGTH 256
 
 #define SYSCALL_ENTRY 0
 #define SYSCALL_EXIT 1
