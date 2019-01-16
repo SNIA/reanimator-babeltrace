@@ -12,8 +12,17 @@
 #define PARAMETER_COUNT 100
 #define KEY_LENGTH 256
 
+#define SYSCALL_COMPAT -1
 #define SYSCALL_ENTRY 0
 #define SYSCALL_EXIT 1
+
+enum syscall_event_type {
+	compat_event,
+	entry_event,
+	exit_event,
+	unknown_event
+} events;
+typedef enum syscall_event_type SyscallEvent;
 
 // #define FSL_PRETTY_VERBOSE
 

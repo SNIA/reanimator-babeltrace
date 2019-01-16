@@ -27,7 +27,7 @@ static char copy_str[512] = "";
 
 extern DataSeriesOutputModule *ds_module;
 
-static int is_tracepoint_entry(char *event_name);
+static SyscallEvent syscall_event_type(char *event_name);
 static void backup_entry_params();
 #ifdef FSL_PRETTY_VERBOSE
 static void print_keys_dbg();
@@ -43,10 +43,13 @@ get_timestamp(struct bt_clock_value *clock_value)
 }
 
 __attribute__((always_inline)) inline void
-get_syscall_name(const char *syscall_name)
+get_syscall_name(const char *syscall_name_full)
 {
-	strcpy(key[key_cnt++], syscall_name);
-	value[val_cnt++] = 0;
+	char *syscall_name_buffer =
+		calloc(strlen(syscall_name_full), sizeof(char));
+	strcpy(key[key_cnt++], "syscall_name_full");
+	strcpy(syscall_name_buffer, syscall_name_full);
+	value[val_cnt++] = (uint64_t)syscall_name_buffer;
 }
 
 __attribute__((always_inline)) inline void get_integer_field(char *key_,
@@ -74,40 +77,44 @@ __attribute__((always_inline)) inline void get_string_field(char *key_,
 
 void print_key_value()
 {
-	char syscall_name[200];
-	int is_entry = is_tracepoint_entry(key[1]);
+	char *syscall_name_full = NULL, *syscall_name = NULL;
 	int errnoVal = 0;
+	SyscallEvent event_type = unknown_event;
 
-	if (*key[1] == 'c') {
-		// compat syscalls
-		key_cnt = 0;
-		val_cnt = 0;
+	syscall_name_full = (char *)value[1];
+	event_type = syscall_event_type(syscall_name_full);
+
+	switch (event_type) {
+	case compat_event: {
+		key_cnt = val_cnt = 0;
+		free(syscall_name_full);
 		return;
 	}
-
-	// Backup the key array and value array as it will be overwritten during
-	// exit.
-	if (is_entry == SYSCALL_ENTRY) {
+	case entry_event: {
+		// Backup the key array and value array
+		// they will be overwritten during syscall exit
 		backup_entry_params();
 		// print_keys_dbg();
-		/* Reset counts */
-		key_cnt = 0;
-		val_cnt = 0;
+		key_cnt = val_cnt = 0;
+		free(syscall_name_full);
 		return;
 	}
-	// print_keys_dbg();
-
-	// exit
-	// create user arguents
-	int itEntryArg = 0;
-	for (int itBck = 4; itBck < backup_val_cnt; ++itBck, ++itEntryArg) {
-		entry_args[itEntryArg] = backup_value[itBck];
+	case exit_event: {
+		// create user arguents
+		int itEntryArg = 0;
+		for (int itBck = 4; itBck < backup_val_cnt;
+		     ++itBck, ++itEntryArg) {
+			entry_args[itEntryArg] = backup_value[itBck];
+		}
+		for (int itVal = 5; itVal < val_cnt; ++itVal, ++itEntryArg) {
+			entry_args[itEntryArg] = value[itVal];
+		}
+		syscall_name = &syscall_name_full[strlen("syscall_exit_")];
+		break;
 	}
-	for (int itVal = 5; itVal < key_cnt; ++itVal, ++itEntryArg) {
-		entry_args[itEntryArg] = value[itVal];
+	default:
+		break;
 	}
-
-	strcpy(syscall_name, &((key[1])[SYSCALL_NAME_EXIT_INDEX]));
 
 	/* Then, store the common field values */
 	common_fields[DS_COMMON_FIELD_TIME_CALLED] = &backup_value[0];
@@ -131,6 +138,7 @@ void print_key_value()
 	    || strcmp(syscall_name, "readlink") == 0) {
 		key_cnt = 0;
 		val_cnt = 0;
+		free(syscall_name_full);
 		return;
 	}
 	////////////////////////////////////////////////////////
@@ -167,19 +175,26 @@ void print_key_value()
 	/* Reset counts */
 	key_cnt = 0;
 	val_cnt = 0;
+	free(syscall_name_full);
+	return;
 }
 
-__attribute__((always_inline)) inline static int
-is_tracepoint_entry(char *event_name)
+__attribute__((always_inline)) inline static SyscallEvent
+syscall_event_type(char *event_name)
 {
+	if (strstr(event_name, "compat")) {
+		return compat_event;
+	}
+
 	if (strstr(event_name, "syscall_entry")) {
-		return 0;
+		return entry_event;
 	}
 
 	if (strstr(event_name, "syscall_exit")) {
-		return 1;
+		return exit_event;
 	}
 
+	printf("%s\n", event_name);
 	assert(0);
 }
 
