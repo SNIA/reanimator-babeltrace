@@ -20,14 +20,14 @@ void bt_common_init_dataseries(void)
 			 "tables/snia_syscall_fields.table");
 		snprintf(xml_path, PATH_MAX, "%s/%s", ds_top, "xml/");
 		ds_module = ds_create_module(ds_fname, tab_path, xml_path);
-		if (!ds_module)
+		if (!ds_module) {
 			printf("create_ds_module failed"
 			       "fname=\"%s\" table_path=\"%s\" "
 			       "xml_path=\"%s\" ",
 			       ds_fname, tab_path, xml_path);
+		}
 	}
 }
-
 
 BT_HIDDEN
 void bt_common_write_record(DataSeriesOutputModule *ds_module,

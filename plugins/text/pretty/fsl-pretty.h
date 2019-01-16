@@ -3,6 +3,7 @@
 #ifndef FSL_PRETTY
 #define FSL_PRETTY
 
+#include <glib-2.0/glib/ghash.h>
 #include <babeltrace/ctf-ir/clock-value-internal.h>
 
 #define SYSCALL_NAME_ENTRY_INDEX 14
@@ -15,6 +16,10 @@
 #define SYSCALL_COMPAT -1
 #define SYSCALL_ENTRY 0
 #define SYSCALL_EXIT 1
+
+struct GenericSyscall {
+	GHashTable *key_value;
+};
 
 enum syscall_event_type {
 	compat_event,
