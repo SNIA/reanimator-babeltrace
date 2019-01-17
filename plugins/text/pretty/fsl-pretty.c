@@ -17,6 +17,14 @@
 	key_cnt = val_cnt = string_fields_cnt = 0;                             \
 	g_hash_table_remove_all(persistent_syscall.key_value);
 
+#define SET_COMMON_FIELDS(ds_field_, key_)                                     \
+	if (g_hash_table_lookup(persistent_syscall.key_value, key_)) {         \
+		SyscallArgument *result =                                      \
+			(SyscallArgument *)g_hash_table_lookup(                \
+				persistent_syscall.key_value, key_);           \
+		common_fields[ds_field_] = result->data;                       \
+	}
+
 extern DataSeriesOutputModule *ds_module;
 
 struct GenericSyscall persistent_syscall = {0};
@@ -35,27 +43,14 @@ static char fakeBuffer[8192];
 
 static SyscallEvent syscall_event_type(char *event_name);
 static void backup_entry_params();
+static void key_destruction(gpointer key);
+static void value_destruction(gpointer ptr);
+static gpointer copy_syscall_argument(gpointer ptr);
+static void insert_value_to_hash_table(char *key_, void *value_);
+
 #ifdef FSL_PRETTY_VERBOSE
 static void print_keys_dbg();
 #endif
-
-static void key_destruction(gpointer key)
-{
-}
-
-static void value_destruction(gpointer ptr)
-{
-}
-
-static void insert_value_to_hash_table(char *key_, void *value_)
-{
-	if (persistent_syscall.key_value == NULL) {
-		persistent_syscall.key_value = g_hash_table_new_full(
-			g_str_hash, g_str_equal, key_destruction,
-			value_destruction);
-	}
-	g_hash_table_insert(persistent_syscall.key_value, key_, value_);
-}
 
 __attribute__((always_inline)) inline void
 get_timestamp(struct bt_clock_value *clock_value)
@@ -80,9 +75,11 @@ get_syscall_name(const char *syscall_name_full)
 	strcpy(syscall_name_buffer, syscall_name_full);
 	value[val_cnt++] = (uint64_t)syscall_name_buffer;
 	// Test
+	char *syscall_name_arg = malloc(strlen(syscall_name_full) + 1);
 	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
 	argument->type = String;
-	argument->data = syscall_name_buffer;
+	strcpy(syscall_name_arg, syscall_name_full);
+	argument->data = syscall_name_arg;
 	insert_value_to_hash_table("syscall_name", (gpointer)argument);
 }
 
@@ -128,8 +125,10 @@ __attribute__((always_inline)) inline void get_string_field(char *key_,
 	char *key_iter = malloc(strlen(key_) + 1);
 	strcpy(key_iter, key_);
 	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
+	char *string_arg = malloc(strlen(value_) + 1);
 	argument->type = String;
-	argument->data = string_field;
+	strcpy(string_arg, value_);
+	argument->data = string_arg;
 	insert_value_to_hash_table(key_iter, (gpointer)argument);
 }
 
@@ -160,8 +159,11 @@ void print_key_value()
 		gpointer timestamp = g_hash_table_lookup(
 			persistent_syscall.key_value, "timestamp");
 		if (timestamp != NULL) {
-			insert_value_to_hash_table("entry_timestamp",
-						   timestamp);
+			insert_value_to_hash_table(
+				"entry_timestamp",
+				copy_syscall_argument(timestamp));
+			g_hash_table_remove(persistent_syscall.key_value,
+					    "timestamp");
 		}
 
 		key_cnt = val_cnt = 0;
@@ -175,8 +177,11 @@ void print_key_value()
 		gpointer timestamp = g_hash_table_lookup(
 			persistent_syscall.key_value, "timestamp");
 		if (timestamp != NULL) {
-			insert_value_to_hash_table("exit_timestamp",
-						   timestamp);
+			insert_value_to_hash_table(
+				"exit_timestamp",
+				copy_syscall_argument(timestamp));
+			g_hash_table_remove(persistent_syscall.key_value,
+					    "timestamp");
 		}
 
 		int itEntryArg = 0;
@@ -207,7 +212,7 @@ void print_key_value()
 			break;
 		}
 		case String: {
-			printf("%s }\n", (char *)argument->data);
+			printf("\"%s\" }\n", (char *)argument->data);
 			break;
 		}
 		case Double: {
@@ -218,14 +223,6 @@ void print_key_value()
 			break;
 		}
 	}
-
-	// Then, store the common field values
-	common_fields[DS_COMMON_FIELD_TIME_CALLED] = &backup_value[0];
-	common_fields[DS_COMMON_FIELD_TIME_RETURNED] = &value[0];
-	common_fields[DS_COMMON_FIELD_RETURN_VALUE] = &value[4];
-	common_fields[DS_COMMON_FIELD_ERRNO_NUMBER] = &errnoVal;
-	common_fields[DS_COMMON_FIELD_EXECUTING_PID] = &value[3];
-	common_fields[DS_COMMON_FIELD_EXECUTING_TID] = &value[3];
 
 	////////////////////////////////////////////////////////
 	if (strcmp(syscall_name, "sendto") == 0
@@ -238,11 +235,19 @@ void print_key_value()
 	    || strcmp(syscall_name, "execve") == 0
 	    || strcmp(syscall_name, "unknown") == 0
 	    || strcmp(syscall_name, "getdents") == 0
-	    || strcmp(syscall_name, "readlink") == 0) {
+	    || strcmp(syscall_name, "readlink") == 0
+	    || strcmp(syscall_name, "wait4") == 0) {
 		CLEANUP_SYSCALL(syscall_name_full)
 		return;
 	}
 	////////////////////////////////////////////////////////
+
+	SET_COMMON_FIELDS(DS_COMMON_FIELD_TIME_CALLED, "entry_timestamp")
+	SET_COMMON_FIELDS(DS_COMMON_FIELD_TIME_RETURNED, "exit_timestamp")
+	SET_COMMON_FIELDS(DS_COMMON_FIELD_RETURN_VALUE, "ret")
+	SET_COMMON_FIELDS(DS_COMMON_FIELD_EXECUTING_PID, "tid")
+	SET_COMMON_FIELDS(DS_COMMON_FIELD_EXECUTING_TID, "tid")
+	common_fields[DS_COMMON_FIELD_ERRNO_NUMBER] = &errnoVal;
 
 	if (strcmp(syscall_name, "write") == 0) {
 		v_args[0] = &fakeBuffer;
@@ -267,14 +272,69 @@ void print_key_value()
 
 	printf(" %s entry time %ld exit time %ld retVal %ld tid %ld\n",
 	       syscall_name, backup_value[0], value[0], value[4], value[3]);
-	// for (int i = 0; i < itEntryArg; ++i) {
-	// 	printf("params[%d] = %ld\n", i, entry_args[i]);
-	// }
+
 	bt_common_write_record(ds_module, syscall_name, entry_args,
 			       common_fields, v_args);
 
 	CLEANUP_SYSCALL(syscall_name_full)
 	return;
+}
+
+static gpointer copy_syscall_argument(gpointer value)
+{
+	SyscallArgument *new_arg = NULL;
+	SyscallArgument *arg = (SyscallArgument *)value;
+	switch (arg->type) {
+	case Integer: {
+		new_arg = malloc(sizeof(SyscallArgument));
+		new_arg->type = Integer;
+		new_arg->data = malloc(sizeof(uint64_t));
+		*(uint64_t *)(new_arg->data) = *(uint64_t *)arg->data;
+		break;
+	}
+	case Double: {
+		new_arg = malloc(sizeof(SyscallArgument));
+		new_arg->type = Double;
+		new_arg->data = malloc(sizeof(double));
+		*(double *)(new_arg->data) = *(double *)arg->data;
+		break;
+	}
+	case String: {
+		new_arg = malloc(sizeof(SyscallArgument));
+		new_arg->type = String;
+		new_arg->data = malloc(strlen((char *)arg->data) + 1);
+		strcpy((char *)new_arg->data, (char *)arg->data);
+		break;
+	}
+	default:
+		assert(0);
+	}
+	return new_arg;
+}
+
+static void key_destruction(gpointer key_)
+{
+	if (strcmp(key_, "syscall_name") || strcmp(key_, "timestamp")) {
+		return;
+	}
+	free(key_);
+}
+
+static void value_destruction(gpointer ptr)
+{
+	SyscallArgument *arg = (SyscallArgument *)ptr;
+	free(arg->data);
+	free(arg);
+}
+
+static void insert_value_to_hash_table(char *key_, void *value_)
+{
+	if (persistent_syscall.key_value == NULL) {
+		persistent_syscall.key_value = g_hash_table_new_full(
+			g_str_hash, g_str_equal, key_destruction,
+			value_destruction);
+	}
+	g_hash_table_insert(persistent_syscall.key_value, key_, value_);
 }
 
 __attribute__((always_inline)) inline static SyscallEvent
