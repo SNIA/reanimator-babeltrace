@@ -17,10 +17,6 @@
 #define SYSCALL_ENTRY 0
 #define SYSCALL_EXIT 1
 
-struct GenericSyscall {
-	GHashTable *key_value;
-};
-
 enum syscall_event_type {
 	compat_event,
 	entry_event,
@@ -28,6 +24,19 @@ enum syscall_event_type {
 	unknown_event
 } events;
 typedef enum syscall_event_type SyscallEvent;
+
+enum syscall_data_type { Integer, String, Double } data_type;
+typedef enum syscall_data_type ValueType;
+
+struct GenericSyscall {
+	GHashTable *key_value;
+};
+
+struct SyscallArgType {
+	void *data;
+	ValueType type;
+};
+typedef struct SyscallArgType SyscallArgument;
 
 // #define FSL_PRETTY_VERBOSE
 

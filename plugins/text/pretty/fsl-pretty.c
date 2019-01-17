@@ -14,7 +14,8 @@
 	for (int stringIdx = 0; stringIdx < string_fields_cnt; stringIdx++) {  \
 		free(string_fields[stringIdx]);                                \
 	}                                                                      \
-	key_cnt = val_cnt = string_fields_cnt = 0;
+	key_cnt = val_cnt = string_fields_cnt = 0;                             \
+	g_hash_table_remove_all(persistent_syscall.key_value);
 
 extern DataSeriesOutputModule *ds_module;
 
@@ -38,18 +39,22 @@ static void backup_entry_params();
 static void print_keys_dbg();
 #endif
 
-static void value_destruction(void *ptr)
+static void key_destruction(gpointer key)
 {
-	free(ptr);
+}
+
+static void value_destruction(gpointer ptr)
+{
 }
 
 static void insert_value_to_hash_table(char *key_, void *value_)
 {
 	if (persistent_syscall.key_value == NULL) {
-		persistent_syscall.key_value =
-			g_hash_table_new_full(g_direct_hash, g_direct_equal,
-					      NULL, value_destruction);
+		persistent_syscall.key_value = g_hash_table_new_full(
+			g_str_hash, g_str_equal, key_destruction,
+			value_destruction);
 	}
+	g_hash_table_insert(persistent_syscall.key_value, key_, value_);
 }
 
 __attribute__((always_inline)) inline void
@@ -59,16 +64,26 @@ get_timestamp(struct bt_clock_value *clock_value)
 	bt_clock_value_get_value(clock_value, &timestamp);
 	strcpy(key[key_cnt++], "Timestamp");
 	value[val_cnt++] = timestamp;
+	// Test
+	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
+	argument->type = Integer;
+	argument->data = malloc(sizeof(uint64_t));
+	*((uint64_t *)argument->data) = timestamp;
+	insert_value_to_hash_table("timestamp", (gpointer)argument);
 }
 
 __attribute__((always_inline)) inline void
 get_syscall_name(const char *syscall_name_full)
 {
-	char *syscall_name_buffer =
-		calloc(strlen(syscall_name_full) + 1, sizeof(char));
+	char *syscall_name_buffer = malloc(strlen(syscall_name_full) + 1);
 	strcpy(key[key_cnt++], "syscall_name_full");
 	strcpy(syscall_name_buffer, syscall_name_full);
 	value[val_cnt++] = (uint64_t)syscall_name_buffer;
+	// Test
+	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
+	argument->type = String;
+	argument->data = syscall_name_buffer;
+	insert_value_to_hash_table("syscall_name", (gpointer)argument);
 }
 
 __attribute__((always_inline)) inline void get_integer_field(char *key_,
@@ -76,6 +91,14 @@ __attribute__((always_inline)) inline void get_integer_field(char *key_,
 {
 	strcpy(key[key_cnt++], key_);
 	value[val_cnt++] = value_;
+	// Test
+	char *key_iter = malloc(strlen(key_) + 1);
+	strcpy(key_iter, key_);
+	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
+	argument->type = Integer;
+	argument->data = malloc(sizeof(uint64_t));
+	*((uint64_t *)argument->data) = value_;
+	insert_value_to_hash_table(key_iter, (gpointer)argument);
 }
 
 __attribute__((always_inline)) inline void get_double_field(char *key_,
@@ -83,16 +106,31 @@ __attribute__((always_inline)) inline void get_double_field(char *key_,
 {
 	strcpy(key[key_cnt++], key_);
 	value[val_cnt++] = (uint64_t)value_;
+	// Test
+	char *key_iter = malloc(strlen(key_) + 1);
+	strcpy(key_iter, key_);
+	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
+	argument->type = Double;
+	argument->data = malloc(sizeof(double));
+	*((uint64_t *)argument->data) = value_;
+	insert_value_to_hash_table(key_iter, (gpointer)argument);
 }
 
 __attribute__((always_inline)) inline void get_string_field(char *key_,
 							    const char *value_)
 {
-	char *string_field = calloc(strlen(value_) + 1, sizeof(char));
+	char *string_field = malloc(strlen(value_) + 1);
 	strcpy(key[key_cnt++], key_);
 	strcpy(string_field, value_);
 	string_fields[string_fields_cnt++] = string_field;
 	value[val_cnt++] = (uint64_t)&string_field[0];
+	// Test
+	char *key_iter = malloc(strlen(key_) + 1);
+	strcpy(key_iter, key_);
+	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
+	argument->type = String;
+	argument->data = string_field;
+	insert_value_to_hash_table(key_iter, (gpointer)argument);
 }
 
 void print_key_value()
@@ -103,6 +141,7 @@ void print_key_value()
 	void *common_fields[DS_NUM_COMMON_FIELDS];
 	long int entry_args[10];
 	void *v_args[DS_MAX_ARGS];
+	GHashTableIter iter;
 
 	syscall_name_full = (char *)value[1];
 	event_type = syscall_event_type(syscall_name_full);
@@ -117,12 +156,29 @@ void print_key_value()
 		// they will be overwritten during syscall exit
 		backup_entry_params();
 		// print_keys_dbg();
+		// Test
+		gpointer timestamp = g_hash_table_lookup(
+			persistent_syscall.key_value, "timestamp");
+		if (timestamp != NULL) {
+			insert_value_to_hash_table("entry_timestamp",
+						   timestamp);
+		}
+
 		key_cnt = val_cnt = 0;
 		free(syscall_name_full);
 		return;
 	}
 	case exit_event: {
 		// create user arguents
+		// print_keys_dbg();
+		// Test
+		gpointer timestamp = g_hash_table_lookup(
+			persistent_syscall.key_value, "timestamp");
+		if (timestamp != NULL) {
+			insert_value_to_hash_table("exit_timestamp",
+						   timestamp);
+		}
+
 		int itEntryArg = 0;
 		for (int itBck = 4; itBck < backup_val_cnt;
 		     ++itBck, ++itEntryArg) {
@@ -136,6 +192,31 @@ void print_key_value()
 	}
 	default:
 		break;
+	}
+
+	// Test
+	g_hash_table_iter_init(&iter, persistent_syscall.key_value);
+
+	gpointer key_test, value_test;
+	while (g_hash_table_iter_next(&iter, &key_test, &value_test)) {
+		printf("{ key = %s, value = ", (char *)key_test);
+		SyscallArgument *argument = (SyscallArgument *)value_test;
+		switch (argument->type) {
+		case Integer: {
+			printf("%ld }\n", *(uint64_t *)argument->data);
+			break;
+		}
+		case String: {
+			printf("%s }\n", (char *)argument->data);
+			break;
+		}
+		case Double: {
+			printf("%f }\n", *(double *)argument->data);
+			break;
+		}
+		default:
+			break;
+		}
 	}
 
 	// Then, store the common field values
