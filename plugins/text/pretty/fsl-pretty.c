@@ -8,6 +8,7 @@
 #include <string.h>
 #include <limits.h>
 #include "fsl-pretty.h"
+#include "fsl-syscall-handlers.h"
 
 #define CLEANUP_SYSCALL() g_hash_table_remove_all(persistent_syscall.key_value);
 
@@ -18,6 +19,9 @@
 				persistent_syscall.key_value, key_);           \
 		common_fields[ds_field_] = result->data;                       \
 	}
+
+#define ADD_SYSCALL_HANDLER(name, func_ptr)                                    \
+	g_hash_table_insert(syscall_handler_map, name, func_ptr);
 
 extern DataSeriesOutputModule *ds_module;
 
@@ -43,23 +47,12 @@ static gpointer copy_syscall_argument(gpointer ptr);
 static void insert_value_to_hash_table(char *key_, void *value_);
 static void print_syscall_arguments();
 
-static void access_syscall_prepare(long *args, void **v_args)
-{
-	SyscallArgument *file_name = (SyscallArgument *)g_hash_table_lookup(
-		persistent_syscall.key_value, "filename");
-	SyscallArgument *mode = (SyscallArgument *)g_hash_table_lookup(
-		persistent_syscall.key_value, "mode");
-	args[0] = (long)file_name->data;
-	args[1] = (long)mode->data;
-	v_args[0] = file_name->data;
-}
-
 static void init_system_call_handlers()
 {
 	syscall_handler_map =
 		g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
-	g_hash_table_insert(syscall_handler_map, "access",
-			    &access_syscall_prepare);
+	ADD_SYSCALL_HANDLER("access", &access_syscall_handler)
+	ADD_SYSCALL_HANDLER("mmap", &mmap_syscall_handler)
 }
 
 __attribute__((always_inline)) inline void
@@ -196,7 +189,7 @@ void print_key_value()
 		       syscall_name);
 		assert(0);
 	}
-	handler(args, &v_args);
+	handler(args, &(v_args[0]));
 	bt_common_write_record(ds_module, syscall_name, args, common_fields,
 			       v_args);
 

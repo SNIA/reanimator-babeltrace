@@ -3,7 +3,7 @@
 #ifndef FSL_PRETTY
 #define FSL_PRETTY
 
-#include <glib-2.0/glib/ghash.h>
+#include <glib.h>
 #include <babeltrace/ctf-ir/clock-value-internal.h>
 
 #define SYSCALL_NAME_ENTRY_INDEX 14

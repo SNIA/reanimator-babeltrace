@@ -7,4 +7,5 @@ libbabeltrace_plugin_text_pretty_cc_la_SOURCES = \
 	pretty.c \
 	print.c \
 	fsl-pretty.c \
+	fsl-syscall-handlers.c \
 	pretty.h
