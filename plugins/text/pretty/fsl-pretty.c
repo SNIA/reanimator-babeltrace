@@ -22,6 +22,7 @@
 extern DataSeriesOutputModule *ds_module;
 
 struct GenericSyscall persistent_syscall = {0};
+GHashTable *syscall_handler_map;
 
 /*
 static uint64_t key_cnt = 0, val_cnt = 0;
@@ -41,6 +42,25 @@ static void value_destruction(gpointer ptr);
 static gpointer copy_syscall_argument(gpointer ptr);
 static void insert_value_to_hash_table(char *key_, void *value_);
 static void print_syscall_arguments();
+
+static void access_syscall_prepare(long *args, void **v_args)
+{
+	SyscallArgument *file_name = (SyscallArgument *)g_hash_table_lookup(
+		persistent_syscall.key_value, "filename");
+	SyscallArgument *mode = (SyscallArgument *)g_hash_table_lookup(
+		persistent_syscall.key_value, "mode");
+	args[0] = (long)file_name->data;
+	args[1] = (long)mode->data;
+	v_args[0] = file_name->data;
+}
+
+static void init_system_call_handlers()
+{
+	syscall_handler_map =
+		g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
+	g_hash_table_insert(syscall_handler_map, "access",
+			    &access_syscall_prepare);
+}
 
 __attribute__((always_inline)) inline void
 get_timestamp(struct bt_clock_value *clock_value)
@@ -155,7 +175,8 @@ void print_key_value()
 	if (strcmp(syscall_name, "execve") == 0
 	    || strcmp(syscall_name, "wait4") == 0
 	    || strcmp(syscall_name, "rt_sigaction") == 0
-	    || strcmp(syscall_name, "rt_sigprocmask") == 0) {
+	    || strcmp(syscall_name, "rt_sigprocmask") == 0
+	    || strcmp(syscall_name, "brk") == 0) {
 		CLEANUP_SYSCALL()
 		return;
 	}
@@ -166,6 +187,18 @@ void print_key_value()
 	SET_COMMON_FIELDS(DS_COMMON_FIELD_EXECUTING_PID, "pid")
 	SET_COMMON_FIELDS(DS_COMMON_FIELD_EXECUTING_TID, "tid")
 	common_fields[DS_COMMON_FIELD_ERRNO_NUMBER] = &errnoVal;
+
+	syscall_handler handler =
+		g_hash_table_lookup(syscall_handler_map, syscall_name);
+
+	if (handler == NULL) {
+		printf("%s handler has not implemented yet !!!\n",
+		       syscall_name);
+		assert(0);
+	}
+	handler(args, &v_args);
+	bt_common_write_record(ds_module, syscall_name, args, common_fields,
+			       v_args);
 
 	/*
 	if (strcmp(syscall_name, "write") == 0) {
@@ -188,13 +221,8 @@ void print_key_value()
 	} else {
 		v_args[0] = NULL;
 	}
-
-	printf(" %s entry time %ld exit time %ld retVal %ld tid %ld\n",
-	       syscall_name, backup_value[0], value[0], value[4], value[3]);
-
-	bt_common_write_record(ds_module, syscall_name, entry_args,
-			       common_fields, v_args);
 	*/
+
 	CLEANUP_SYSCALL()
 	return;
 }
@@ -252,6 +280,7 @@ static void insert_value_to_hash_table(char *key_, void *value_)
 		persistent_syscall.key_value = g_hash_table_new_full(
 			g_str_hash, g_str_equal, key_destruction,
 			value_destruction);
+		init_system_call_handlers();
 	}
 	g_hash_table_insert(persistent_syscall.key_value, key_, value_);
 }

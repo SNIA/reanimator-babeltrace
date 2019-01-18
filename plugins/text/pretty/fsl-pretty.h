@@ -38,6 +38,8 @@ struct SyscallArgType {
 };
 typedef struct SyscallArgType SyscallArgument;
 
+typedef void (*syscall_handler)(long *, void **);
+
 // #define FSL_PRETTY_VERBOSE
 
 void print_key_value();
