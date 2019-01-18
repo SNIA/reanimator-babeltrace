@@ -28,18 +28,6 @@ extern DataSeriesOutputModule *ds_module;
 struct GenericSyscall persistent_syscall = {0};
 GHashTable *syscall_handler_map;
 
-/*
-static uint64_t key_cnt = 0, val_cnt = 0;
-static uint64_t backup_key_cnt = 0, backup_val_cnt = 0;
-static char key[PARAMETER_COUNT][KEY_LENGTH];
-static uint64_t value[PARAMETER_COUNT];
-static char backup_key[PARAMETER_COUNT][KEY_LENGTH];
-static uint64_t backup_value[PARAMETER_COUNT];
-static uint64_t string_fields_cnt = 0;
-static char *string_fields[PARAMETER_COUNT];
-
-static char fakeBuffer[8192];
-*/
 static SyscallEvent syscall_event_type(char *event_name);
 static void key_destruction(gpointer key);
 static void value_destruction(gpointer ptr);
@@ -53,6 +41,12 @@ static void init_system_call_handlers()
 		g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
 	ADD_SYSCALL_HANDLER("access", &access_syscall_handler)
 	ADD_SYSCALL_HANDLER("mmap", &mmap_syscall_handler)
+	ADD_SYSCALL_HANDLER("open", &open_syscall_handler)
+	ADD_SYSCALL_HANDLER("close", &close_syscall_handler)
+	ADD_SYSCALL_HANDLER("read", &read_syscall_handler)
+	ADD_SYSCALL_HANDLER("munmap", &munmap_syscall_handler)
+	ADD_SYSCALL_HANDLER("write", &write_syscall_handler)
+	ADD_SYSCALL_HANDLER("lseek", &lseek_syscall_handler)
 }
 
 __attribute__((always_inline)) inline void
@@ -121,8 +115,8 @@ void print_key_value()
 	int errnoVal = 0;
 	SyscallEvent event_type = unknown_event;
 	void *common_fields[DS_NUM_COMMON_FIELDS];
-	long args[10];
-	void *v_args[DS_MAX_ARGS];
+	long args[10] = {0};
+	void *v_args[DS_MAX_ARGS] = {0};
 	SyscallArgument *syscall_name_arg =
 		(SyscallArgument *)g_hash_table_lookup(
 			persistent_syscall.key_value, "syscall_name");
@@ -165,11 +159,16 @@ void print_key_value()
 	}
 	print_syscall_arguments();
 
+	// TODO(Umit) finish all these call implementations
+	// TODO(Umit) look at unknown syscalls
 	if (strcmp(syscall_name, "execve") == 0
 	    || strcmp(syscall_name, "wait4") == 0
 	    || strcmp(syscall_name, "rt_sigaction") == 0
 	    || strcmp(syscall_name, "rt_sigprocmask") == 0
-	    || strcmp(syscall_name, "brk") == 0) {
+	    || strcmp(syscall_name, "brk") == 0
+	    || strcmp(syscall_name, "newfstat") == 0
+	    || strcmp(syscall_name, "mprotect") == 0
+	    || strcmp(syscall_name, "unknown") == 0) {
 		CLEANUP_SYSCALL()
 		return;
 	}
@@ -192,29 +191,6 @@ void print_key_value()
 	handler(args, &(v_args[0]));
 	bt_common_write_record(ds_module, syscall_name, args, common_fields,
 			       v_args);
-
-	/*
-	if (strcmp(syscall_name, "write") == 0) {
-		v_args[0] = &fakeBuffer;
-	} else if (strcmp(syscall_name, "read") == 0) {
-		v_args[0] = &fakeBuffer;
-		uint64_t swap = entry_args[1];
-		entry_args[1] = entry_args[2];
-		entry_args[2] = swap;
-		if (value[4] == 0)
-			value[4] = swap;
-	} else if (strcmp(syscall_name, "clone") == 0) {
-		v_args[0] = &value[3];
-		v_args[1] = &value[4];
-	} else if (strcmp(syscall_name, "open") == 0
-		   || strcmp(syscall_name, "access") == 0
-		   || strcmp(syscall_name, "stat") == 0
-		   || strcmp(syscall_name, "statfs") == 0) {
-		v_args[0] = &backup_value[4];
-	} else {
-		v_args[0] = NULL;
-	}
-	*/
 
 	CLEANUP_SYSCALL()
 	return;
