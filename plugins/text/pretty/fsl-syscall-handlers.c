@@ -3,7 +3,10 @@
 #include "fsl-syscall-handlers.h"
 
 extern struct GenericSyscall persistent_syscall;
+extern FILE *buffer_file;
+extern uint64_t event_count;
 static char fakeBuffer[8192];
+void *buffer_ptr = NULL;
 
 #define READ_SYSCALL_ARG(param, key)                                           \
 	SyscallArgument *param = (SyscallArgument *)g_hash_table_lookup(       \
@@ -55,12 +58,34 @@ void close_syscall_handler(long *args, void **v_args)
 
 void read_syscall_handler(long *args, void **v_args)
 {
+	uint64_t event_id = 0, data_size = 0;
+	uint64_t current_pos = 0;
+
 	READ_SYSCALL_ARG(fd, "fd")
 	READ_SYSCALL_ARG(count, "count")
 	args[0] = get_value_for_args(fd);
 	args[2] = get_value_for_args(count);
-	v_args[0] = &fakeBuffer;
-	args[1] = (long)&fakeBuffer;
+
+	current_pos = ftell(buffer_file);
+	fread(&event_id, sizeof(event_id), 1, buffer_file);
+	if (event_id == event_count && get_value_for_args(count) == 128) {
+		fread(&data_size, sizeof(data_size), 1, buffer_file);
+		buffer_ptr = malloc(data_size);
+		fread(buffer_ptr, sizeof(char), data_size, buffer_file);
+		v_args[0] = buffer_ptr;
+		args[1] = (long)buffer_ptr;
+		SyscallArgument *argument = malloc(sizeof(SyscallArgument));
+		argument->type = Integer;
+		argument->data = buffer_ptr;
+		g_hash_table_insert(persistent_syscall.key_value, "buf",
+				    (gpointer)argument);
+	} else {
+		printf("event ids are not matched %ld %ld\n", event_id,
+		       event_count);
+		fseek(buffer_file, current_pos, SEEK_SET);
+		v_args[0] = &fakeBuffer;
+		args[1] = (long)&fakeBuffer;
+	}
 }
 
 void munmap_syscall_handler(long *args, void **v_args)

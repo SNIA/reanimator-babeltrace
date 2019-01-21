@@ -25,8 +25,11 @@
 
 extern DataSeriesOutputModule *ds_module;
 
+static GHashTable *syscall_handler_map;
+
 struct GenericSyscall persistent_syscall = {0};
-GHashTable *syscall_handler_map;
+uint64_t event_count = 0;
+FILE *buffer_file = NULL;
 
 static SyscallEvent syscall_event_type(char *event_name);
 static void key_destruction(gpointer key);
@@ -47,6 +50,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("munmap", &munmap_syscall_handler)
 	ADD_SYSCALL_HANDLER("write", &write_syscall_handler)
 	ADD_SYSCALL_HANDLER("lseek", &lseek_syscall_handler)
+	buffer_file = fopen("/tmp/buffer-capture.dat", "rb");
 }
 
 __attribute__((always_inline)) inline void
@@ -109,7 +113,7 @@ __attribute__((always_inline)) inline void get_string_field(char *key_,
 	insert_value_to_hash_table(key_iter, (gpointer)argument);
 }
 
-void print_key_value()
+void fsl_dump_values()
 {
 	char *syscall_name_full = NULL, *syscall_name = NULL;
 	int errnoVal = 0;
@@ -127,6 +131,7 @@ void print_key_value()
 	switch (event_type) {
 	case compat_event: {
 		CLEANUP_SYSCALL()
+		event_count++;
 		return;
 	}
 	case entry_event: {
@@ -139,6 +144,7 @@ void print_key_value()
 			g_hash_table_remove(persistent_syscall.key_value,
 					    "timestamp");
 		}
+		event_count++;
 		return;
 	}
 	case exit_event: {
@@ -157,7 +163,9 @@ void print_key_value()
 	default:
 		break;
 	}
+#ifdef FSL_PRETTY_VERBOSE
 	print_syscall_arguments();
+#endif
 
 	// TODO(Umit) finish all these call implementations
 	// TODO(Umit) look at unknown syscalls
@@ -170,6 +178,7 @@ void print_key_value()
 	    || strcmp(syscall_name, "mprotect") == 0
 	    || strcmp(syscall_name, "unknown") == 0) {
 		CLEANUP_SYSCALL()
+		event_count++;
 		return;
 	}
 
@@ -193,6 +202,7 @@ void print_key_value()
 			       v_args);
 
 	CLEANUP_SYSCALL()
+	event_count++;
 	return;
 }
 
@@ -285,15 +295,18 @@ __attribute__((always_inline)) inline static void print_syscall_arguments()
 		SyscallArgument *argument = (SyscallArgument *)value_test;
 		switch (argument->type) {
 		case Integer: {
-			printf("%ld }\n", *(uint64_t *)argument->data);
+			printf("%ld type = Integer }\n",
+			       *(uint64_t *)argument->data);
 			break;
 		}
 		case String: {
-			printf("\"%s\" }\n", (char *)argument->data);
+			printf("\"%s\" type = String }\n",
+			       (char *)argument->data);
 			break;
 		}
 		case Double: {
-			printf("%f }\n", *(double *)argument->data);
+			printf("%f type = Double }\n",
+			       *(double *)argument->data);
 			break;
 		}
 		default:

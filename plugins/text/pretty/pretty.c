@@ -137,7 +137,7 @@ enum bt_component_status handle_notification(struct pretty_component *pretty,
 	switch (bt_notification_get_type(notification)) {
 	case BT_NOTIFICATION_TYPE_EVENT:
 		ret = pretty_print_event(pretty, notification);
-		print_key_value();
+	        fsl_dump_values();
 		break;
 	case BT_NOTIFICATION_TYPE_INACTIVITY:
 		fprintf(stderr, "Inactivity notification\n");
