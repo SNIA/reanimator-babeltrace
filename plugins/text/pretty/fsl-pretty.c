@@ -31,6 +31,8 @@ struct GenericSyscall persistent_syscall = {0};
 uint64_t event_count = 0;
 FILE *buffer_file = NULL;
 
+static bool isUmaskInitialized = false;
+
 static SyscallEvent syscall_event_type(char *event_name);
 static void key_destruction(gpointer key);
 static void value_destruction(gpointer ptr);
@@ -178,6 +180,14 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "newfstat") == 0
 	    || strcmp(syscall_name, "mprotect") == 0
 	    || strcmp(syscall_name, "unknown") == 0) {
+		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
+			isUmaskInitialized = true;
+			SyscallArgument *result =
+				(SyscallArgument *)g_hash_table_lookup(
+					persistent_syscall.key_value, "pid");
+			uint64_t pid = *((uint64_t *)result->data);
+			ds_write_umask_at_start(ds_module, pid);
+		}
 		CLEANUP_SYSCALL()
 		event_count++;
 		return;
