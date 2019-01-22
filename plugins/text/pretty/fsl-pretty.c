@@ -50,6 +50,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("munmap", &munmap_syscall_handler)
 	ADD_SYSCALL_HANDLER("write", &write_syscall_handler)
 	ADD_SYSCALL_HANDLER("lseek", &lseek_syscall_handler)
+	// TODO(Umit) fix this
 	buffer_file = fopen("/tmp/buffer-capture.dat", "rb");
 }
 

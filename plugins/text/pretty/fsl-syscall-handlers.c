@@ -68,7 +68,8 @@ void read_syscall_handler(long *args, void **v_args)
 
 	current_pos = ftell(buffer_file);
 	fread(&event_id, sizeof(event_id), 1, buffer_file);
-	if (event_id == event_count && get_value_for_args(count) == 128) {
+
+	if (event_id == event_count) {
 		fread(&data_size, sizeof(data_size), 1, buffer_file);
 		buffer_ptr = malloc(data_size);
 		fread(buffer_ptr, sizeof(char), data_size, buffer_file);
