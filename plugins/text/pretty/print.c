@@ -1487,9 +1487,10 @@ int flush_buf(struct pretty_component *pretty)
 		goto end;
 	}
 
-	if (fwrite(pretty->string->str, pretty->string->len, 1, pretty->out) != 1) {
-		ret = -1;
-	}
+        // TODO(Umit) Fix this part with adding command line argument
+	// if (fwrite(pretty->string->str, pretty->string->len, 1, pretty->out) != 1) {
+	//	ret = -1;
+	// }
 
 end:
 	return ret;

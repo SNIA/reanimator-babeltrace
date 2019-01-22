@@ -38,7 +38,10 @@ static void key_destruction(gpointer key);
 static void value_destruction(gpointer ptr);
 static gpointer copy_syscall_argument(gpointer ptr);
 static void insert_value_to_hash_table(char *key_, void *value_);
+
+#ifdef FSL_PRETTY_VERBOSE
 static void print_syscall_arguments();
+#endif
 
 static void init_system_call_handlers()
 {
@@ -294,6 +297,7 @@ syscall_event_type(char *event_name)
 	assert(0);
 }
 
+#ifdef FSL_PRETTY_VERBOSE
 __attribute__((always_inline)) inline static void print_syscall_arguments()
 {
 	GHashTableIter iter;
@@ -325,3 +329,4 @@ __attribute__((always_inline)) inline static void print_syscall_arguments()
 		}
 	}
 }
+#endif

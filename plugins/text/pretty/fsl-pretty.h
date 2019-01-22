@@ -40,7 +40,7 @@ typedef struct SyscallArgType SyscallArgument;
 
 typedef void (*syscall_handler)(long *, void **);
 
-#define FSL_PRETTY_VERBOSE
+// #define FSL_PRETTY_VERBOSE
 
 void fsl_dump_values();
 void get_timestamp(struct bt_clock_value *clock_value);
