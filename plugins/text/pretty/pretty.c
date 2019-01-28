@@ -71,6 +71,7 @@ const char *plugin_options[] = {
 static
 void destroy_pretty_data(struct pretty_component *pretty)
 {
+	bt_common_destroy_module();
 	bt_put(pretty->input_iterator);
 
 	if (pretty->string) {
@@ -339,9 +340,11 @@ void warn_wrong_color_param(struct pretty_component *pretty)
 static
 enum bt_component_status open_output_file(struct pretty_component *pretty)
 {
+	char *ds_file_name = NULL;
 	enum bt_component_status ret = BT_COMPONENT_STATUS_OK;
 
 	if (!pretty->options.output_path) {
+		bt_common_init_dataseries("/tmp/lttng.ds");
 		goto end;
 	}
 
@@ -350,6 +353,11 @@ enum bt_component_status open_output_file(struct pretty_component *pretty)
 		goto error;
 	}
 
+	ds_file_name = malloc(strlen(pretty->options.output_path) + 4);
+	strcpy(ds_file_name, pretty->options.output_path);
+	strcat(ds_file_name, ".ds");
+	bt_common_init_dataseries(ds_file_name);
+	free(ds_file_name);
 	goto end;
 
 error:

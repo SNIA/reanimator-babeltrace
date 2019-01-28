@@ -2887,8 +2887,6 @@ int main(int argc, const char **argv)
 	BT_LOGI("Executing command: cmd=%d, command-name=\"%s\"",
 		cfg->command, cfg->command_name);
 
-	bt_common_init_dataseries();
-
 	switch (cfg->command) {
 	case BT_CONFIG_COMMAND_RUN:
 		ret = cmd_run(cfg);
@@ -2919,7 +2917,6 @@ int main(int argc, const char **argv)
 	retcode = ret ? 1 : 0;
 
 end:
-	bt_common_destroy_module();
 	BT_PUT(cfg);
 	fini_static_data();
 	return retcode;

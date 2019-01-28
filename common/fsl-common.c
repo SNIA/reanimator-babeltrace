@@ -8,9 +8,8 @@
 DataSeriesOutputModule *ds_module;
 
 BT_HIDDEN
-void bt_common_init_dataseries(void)
+void bt_common_init_dataseries(char *ds_fname)
 {
-	char *ds_fname = "/tmp/lttng.ds";
 	if (ds_fname) {
 		char tab_path[PATH_MAX] = {0}, xml_path[PATH_MAX] = {0};
 		const char *ds_top = getenv("STRACE2DS");
