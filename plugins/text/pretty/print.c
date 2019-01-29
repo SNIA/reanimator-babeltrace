@@ -1487,10 +1487,13 @@ int flush_buf(struct pretty_component *pretty)
 		goto end;
 	}
 
-        // TODO(Umit) Fix this part with adding command line argument
-	// if (fwrite(pretty->string->str, pretty->string->len, 1, pretty->out) != 1) {
-	//	ret = -1;
-	// }
+	if (bt_common_is_fsl_ds_enabled()) {
+		goto end;
+        }
+
+	if (fwrite(pretty->string->str, pretty->string->len, 1, pretty->out) != 1) {
+		ret = -1;
+	}
 
 end:
 	return ret;

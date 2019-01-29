@@ -24,4 +24,7 @@ char *bt_common_get_buffer_file_path(void);
 BT_HIDDEN
 void bt_common_set_buffer_file_path(char *file_path);
 
+BT_HIDDEN
+bool bt_common_is_fsl_ds_enabled(void);
+
 #endif

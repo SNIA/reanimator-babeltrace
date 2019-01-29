@@ -55,7 +55,6 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("munmap", &munmap_syscall_handler)
 	ADD_SYSCALL_HANDLER("write", &write_syscall_handler)
 	ADD_SYSCALL_HANDLER("lseek", &lseek_syscall_handler)
-	// TODO(Umit) fix this
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
@@ -130,6 +129,10 @@ void fsl_dump_values()
 	SyscallArgument *syscall_name_arg =
 		(SyscallArgument *)g_hash_table_lookup(
 			persistent_syscall.key_value, "syscall_name");
+
+	if (!bt_common_is_fsl_ds_enabled()) {
+		return;
+	}
 
 	syscall_name_full = syscall_name_arg->data;
 	event_type = syscall_event_type(syscall_name_full);

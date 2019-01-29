@@ -7,6 +7,7 @@
 
 DataSeriesOutputModule *ds_module;
 char ds_buffer_file_path[PATH_MAX];
+bool isDSEnabled = false;
 
 BT_HIDDEN
 void bt_common_init_dataseries(char *ds_fname)
@@ -56,4 +57,11 @@ BT_HIDDEN
 void bt_common_set_buffer_file_path(char *file_path)
 {
 	strcpy(ds_buffer_file_path, file_path);
+	isDSEnabled = true;
+}
+
+BT_HIDDEN
+bool bt_common_is_fsl_ds_enabled(void)
+{
+	return isDSEnabled;
 }
