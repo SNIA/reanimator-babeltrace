@@ -6,6 +6,7 @@
 #include <babeltrace/compat/unistd-internal.h>
 
 DataSeriesOutputModule *ds_module;
+char ds_buffer_file_path[PATH_MAX];
 
 BT_HIDDEN
 void bt_common_init_dataseries(char *ds_fname)
@@ -43,4 +44,16 @@ BT_HIDDEN
 void bt_common_destroy_module()
 {
 	ds_destroy_module(ds_module);
+}
+
+BT_HIDDEN
+char *bt_common_get_buffer_file_path(void)
+{
+	return ds_buffer_file_path;
+}
+
+BT_HIDDEN
+void bt_common_set_buffer_file_path(char *file_path)
+{
+	strcpy(ds_buffer_file_path, file_path);
 }

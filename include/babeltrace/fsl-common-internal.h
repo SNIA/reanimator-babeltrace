@@ -18,4 +18,10 @@ void bt_common_write_record(DataSeriesOutputModule *ds_module,
 BT_HIDDEN
 void bt_common_destroy_module();
 
+BT_HIDDEN
+char *bt_common_get_buffer_file_path(void);
+
+BT_HIDDEN
+void bt_common_set_buffer_file_path(char *file_path);
+
 #endif

@@ -1345,6 +1345,7 @@ enum {
 	OPT_URL,
 	OPT_VALUE,
 	OPT_VERBOSE,
+	OPT_DS_BUFFER_FILE,
 };
 
 enum bt_config_component_dest {
@@ -2920,6 +2921,7 @@ struct poptOption convert_long_options[] = {
 	{ "timerange", '\0', POPT_ARG_STRING, NULL, OPT_TIMERANGE, NULL, NULL },
 	{ "url", 'u', POPT_ARG_STRING, NULL, OPT_URL, NULL, NULL },
 	{ "verbose", 'v', POPT_ARG_NONE, NULL, OPT_VERBOSE, NULL, NULL },
+	{ "ds-buffer-file", 'x', POPT_ARG_STRING, NULL, OPT_DS_BUFFER_FILE, NULL, NULL },
 	{ NULL, 0, '\0', NULL, 0, NULL, NULL },
 };
 
@@ -3961,6 +3963,7 @@ struct bt_config *bt_config_convert_from_args(int argc, const char *argv[],
 		case OPT_NO_DELTA:
 		case OPT_OUTPUT_FORMAT:
 		case OPT_OUTPUT:
+		case OPT_DS_BUFFER_FILE:
 		case OPT_RUN_ARGS:
 		case OPT_RUN_ARGS_0:
 		case OPT_STREAM_INTERSECTION:
@@ -4239,6 +4242,9 @@ struct bt_config *bt_config_convert_from_args(int argc, const char *argv[],
 				print_err_oom();
 				goto error;
 			}
+			break;
+		case OPT_DS_BUFFER_FILE:
+			bt_common_set_buffer_file_path(arg);
 			break;
 		case OPT_RUN_ARGS:
 			if (print_run_args_0) {
