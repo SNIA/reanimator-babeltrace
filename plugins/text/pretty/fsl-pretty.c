@@ -55,6 +55,8 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("munmap", &munmap_syscall_handler)
 	ADD_SYSCALL_HANDLER("write", &write_syscall_handler)
 	ADD_SYSCALL_HANDLER("lseek", &lseek_syscall_handler)
+	ADD_SYSCALL_HANDLER("newfstat", &fstat_syscall_handler)
+	ADD_SYSCALL_HANDLER("stat", &stat_syscall_handler)
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
@@ -183,7 +185,6 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "rt_sigaction") == 0
 	    || strcmp(syscall_name, "rt_sigprocmask") == 0
 	    || strcmp(syscall_name, "brk") == 0
-	    || strcmp(syscall_name, "newfstat") == 0
 	    || strcmp(syscall_name, "mprotect") == 0
 	    || strcmp(syscall_name, "unknown") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
@@ -215,9 +216,9 @@ void fsl_dump_values()
 		assert(0);
 	}
 	handler(args, &(v_args[0]));
+
 	bt_common_write_record(ds_module, syscall_name, args, common_fields,
 			       v_args);
-
 	CLEANUP_SYSCALL()
 	event_count++;
 	return;
