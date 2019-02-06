@@ -20,12 +20,25 @@
 		common_fields[ds_field_] = result->data;                       \
 	}
 
+#define GET_THREAD_ID()                                                        \
+	*(uint64_t *)((SyscallArgument *)g_hash_table_lookup(                  \
+			      persistent_syscall.key_value, "tid"))            \
+		 ->data
+
+#define GET_SYSCALL_NAME()                                                     \
+	(char *)((SyscallArgument *)g_hash_table_lookup(                       \
+			 persistent_syscall.key_value, "syscall_name"))        \
+		->data
+
 #define ADD_SYSCALL_HANDLER(name, func_ptr)                                    \
 	g_hash_table_insert(syscall_handler_map, name, func_ptr);
 
 extern DataSeriesOutputModule *ds_module;
 
-static GHashTable *syscall_handler_map;
+static uint64_t threads_idx = 0;
+static uint64_t thread_ids[1024];
+static GHashTable *syscall_handler_map = NULL;
+static GHashTable *syscalls_kv_store = NULL;
 
 struct GenericSyscall persistent_syscall = {0};
 uint64_t event_count = 0;
@@ -38,6 +51,7 @@ static void key_destruction(gpointer key);
 static void value_destruction(gpointer ptr);
 static gpointer copy_syscall_argument(gpointer ptr);
 static void insert_value_to_hash_table(char *key_, void *value_);
+static bool contains_thread(uint64_t thread_id);
 
 #ifdef FSL_PRETTY_VERBOSE
 static void print_syscall_arguments();
@@ -122,22 +136,31 @@ __attribute__((always_inline)) inline void get_string_field(char *key_,
 
 void fsl_dump_values()
 {
-	char *syscall_name_full = NULL, *syscall_name = NULL;
+	char *syscall_name = NULL;
 	int errnoVal = 0;
 	SyscallEvent event_type = unknown_event;
 	void *common_fields[DS_NUM_COMMON_FIELDS];
 	long args[10] = {0};
 	void *v_args[DS_MAX_ARGS] = {0};
-	SyscallArgument *syscall_name_arg =
-		(SyscallArgument *)g_hash_table_lookup(
-			persistent_syscall.key_value, "syscall_name");
+	char *syscall_name_full = GET_SYSCALL_NAME();
+	uint64_t thread_id = GET_THREAD_ID();
 
 	if (!bt_common_is_fsl_ds_enabled()) {
 		return;
 	}
 
-	syscall_name_full = syscall_name_arg->data;
 	event_type = syscall_event_type(syscall_name_full);
+	if (!contains_thread(thread_id)) {
+		thread_ids[threads_idx] = thread_id;
+		struct GenericSyscall *new_thread_syscall_kv =
+			malloc(sizeof(struct GenericSyscall));
+		new_thread_syscall_kv->key_value = g_hash_table_new_full(
+			g_str_hash, g_str_equal, key_destruction,
+			value_destruction);
+		g_hash_table_insert(syscalls_kv_store, &thread_ids[threads_idx],
+				    new_thread_syscall_kv);
+		threads_idx++;
+	}
 
 	switch (event_type) {
 	case compat_event: {
@@ -277,10 +300,24 @@ static void insert_value_to_hash_table(char *key_, void *value_)
 		persistent_syscall.key_value = g_hash_table_new_full(
 			g_str_hash, g_str_equal, key_destruction,
 			value_destruction);
+		syscalls_kv_store =
+			g_hash_table_new(g_int64_hash, g_int64_equal);
 		init_system_call_handlers();
 	}
 	g_hash_table_insert(persistent_syscall.key_value, key_, value_);
 }
+
+__attribute__((always_inline)) inline static bool
+contains_thread(uint64_t thread_id)
+{
+	for (int i = 0; i < threads_idx; i++) {
+		if (thread_id == thread_ids[i]) {
+			return true;
+		}
+	}
+	return false;
+}
+
 
 __attribute__((always_inline)) inline static SyscallEvent
 syscall_event_type(char *event_name)
