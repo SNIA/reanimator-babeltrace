@@ -3,14 +3,22 @@
 #include "fsl-syscall-handlers.h"
 
 extern struct GenericSyscall persistent_syscall;
+extern GHashTable *syscalls_kv_store;
 extern FILE *buffer_file;
 extern uint64_t event_count;
 static char fakeBuffer[8192];
 void *buffer_ptr = NULL;
 
 #define READ_SYSCALL_ARG(param, key)                                           \
-	SyscallArgument *param = (SyscallArgument *)g_hash_table_lookup(       \
-		persistent_syscall.key_value, key);
+	SyscallArgument *param = NULL;                                         \
+	{                                                                      \
+		uint64_t local_thread_id = GET_THREAD_ID();                    \
+		struct GenericSyscall *thread_local_kv_store =                 \
+			(struct GenericSyscall *)g_hash_table_lookup(          \
+				syscalls_kv_store, &local_thread_id);          \
+		param = (SyscallArgument *)g_hash_table_lookup(                \
+			thread_local_kv_store->key_value, key);                \
+	}
 
 static long get_value_for_args(SyscallArgument *arg);
 static void set_buffer_to_vargs(long *args, void **v_args, uint64_t args_idx,
@@ -193,6 +201,10 @@ static void set_buffer_to_vargs(long *args, void **v_args, uint64_t args_idx,
 	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
 	argument->type = Integer;
 	argument->data = buffer_ptr;
-	g_hash_table_insert(persistent_syscall.key_value, arg_name,
+	uint64_t local_thread_id = GET_THREAD_ID();
+	struct GenericSyscall *thread_local_kv_store =
+		(struct GenericSyscall *)g_hash_table_lookup(syscalls_kv_store,
+							     &local_thread_id);
+	g_hash_table_insert(thread_local_kv_store->key_value, arg_name,
 			    (gpointer)argument);
 }

@@ -42,6 +42,21 @@ typedef void (*syscall_handler)(long *, void **);
 
 // #define FSL_PRETTY_VERBOSE
 
+#define GET_THREAD_ID()                                                        \
+	*(uint64_t *)((SyscallArgument *)g_hash_table_lookup(                  \
+			      persistent_syscall.key_value, "tid"))            \
+		 ->data
+
+#define GET_PROCESS_ID()                                                       \
+	*(uint64_t *)((SyscallArgument *)g_hash_table_lookup(                  \
+			      persistent_syscall.key_value, "pid"))            \
+		 ->data
+
+#define GET_SYSCALL_NAME()                                                     \
+	(char *)((SyscallArgument *)g_hash_table_lookup(                       \
+			 persistent_syscall.key_value, "syscall_name"))        \
+		->data
+
 void fsl_dump_values();
 void get_timestamp(struct bt_clock_value *clock_value);
 void get_syscall_name(const char *syscall_name);

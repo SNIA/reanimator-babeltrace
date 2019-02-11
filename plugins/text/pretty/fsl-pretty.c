@@ -12,23 +12,30 @@
 
 #define CLEANUP_SYSCALL() g_hash_table_remove_all(persistent_syscall.key_value);
 
-#define SET_COMMON_FIELDS(ds_field_, key_)                                     \
-	if (g_hash_table_lookup(persistent_syscall.key_value, key_)) {         \
-		SyscallArgument *result =                                      \
-			(SyscallArgument *)g_hash_table_lookup(                \
-				persistent_syscall.key_value, key_);           \
-		common_fields[ds_field_] = result->data;                       \
+#define CLEANUP_THREAD_LOCAL_SYSCALL()                                         \
+	{                                                                      \
+		uint64_t local_thread_id = GET_THREAD_ID();                    \
+		struct GenericSyscall *thread_local_kv_store =                 \
+			(struct GenericSyscall *)g_hash_table_lookup(          \
+				syscalls_kv_store, &local_thread_id);          \
+		g_hash_table_remove_all(thread_local_kv_store->key_value);     \
 	}
 
-#define GET_THREAD_ID()                                                        \
-	*(uint64_t *)((SyscallArgument *)g_hash_table_lookup(                  \
-			      persistent_syscall.key_value, "tid"))            \
-		 ->data
-
-#define GET_SYSCALL_NAME()                                                     \
-	(char *)((SyscallArgument *)g_hash_table_lookup(                       \
-			 persistent_syscall.key_value, "syscall_name"))        \
-		->data
+#define SET_COMMON_FIELDS(ds_field_, key_)                                     \
+	{                                                                      \
+		uint64_t local_thread_id = GET_THREAD_ID();                    \
+		struct GenericSyscall *thread_local_kv_store =                 \
+			(struct GenericSyscall *)g_hash_table_lookup(          \
+				syscalls_kv_store, &local_thread_id);          \
+		if (g_hash_table_lookup(thread_local_kv_store->key_value,      \
+					key_)) {                               \
+			SyscallArgument *result =                              \
+				(SyscallArgument *)g_hash_table_lookup(        \
+					thread_local_kv_store->key_value,      \
+					key_);                                 \
+			common_fields[ds_field_] = result->data;               \
+		}                                                              \
+	}
 
 #define ADD_SYSCALL_HANDLER(name, func_ptr)                                    \
 	g_hash_table_insert(syscall_handler_map, name, func_ptr);
@@ -38,9 +45,9 @@ extern DataSeriesOutputModule *ds_module;
 static uint64_t threads_idx = 0;
 static uint64_t thread_ids[1024];
 static GHashTable *syscall_handler_map = NULL;
-static GHashTable *syscalls_kv_store = NULL;
 
 struct GenericSyscall persistent_syscall = {0};
+GHashTable *syscalls_kv_store = NULL;
 uint64_t event_count = 0;
 FILE *buffer_file = NULL;
 
@@ -52,6 +59,7 @@ static void value_destruction(gpointer ptr);
 static gpointer copy_syscall_argument(gpointer ptr);
 static void insert_value_to_hash_table(char *key_, void *value_);
 static bool contains_thread(uint64_t thread_id);
+static void copy_syscall(gpointer key, gpointer value, gpointer kv_store);
 
 #ifdef FSL_PRETTY_VERBOSE
 static void print_syscall_arguments();
@@ -144,6 +152,8 @@ void fsl_dump_values()
 	void *v_args[DS_MAX_ARGS] = {0};
 	char *syscall_name_full = GET_SYSCALL_NAME();
 	uint64_t thread_id = GET_THREAD_ID();
+	uint64_t process_id = GET_PROCESS_ID();
+	struct GenericSyscall *thread_kv_store;
 
 	if (!bt_common_is_fsl_ds_enabled()) {
 		return;
@@ -161,9 +171,12 @@ void fsl_dump_values()
 				    new_thread_syscall_kv);
 		threads_idx++;
 	}
+	thread_kv_store = (struct GenericSyscall *)g_hash_table_lookup(
+		syscalls_kv_store, &thread_id);
 
 	switch (event_type) {
 	case compat_event: {
+		CLEANUP_THREAD_LOCAL_SYSCALL()
 		CLEANUP_SYSCALL()
 		event_count++;
 		return;
@@ -178,6 +191,10 @@ void fsl_dump_values()
 			g_hash_table_remove(persistent_syscall.key_value,
 					    "timestamp");
 		}
+
+		g_hash_table_foreach(persistent_syscall.key_value,
+				     &copy_syscall, thread_kv_store);
+		CLEANUP_SYSCALL()
 		event_count++;
 		return;
 	}
@@ -191,6 +208,10 @@ void fsl_dump_values()
 			g_hash_table_remove(persistent_syscall.key_value,
 					    "timestamp");
 		}
+
+		g_hash_table_foreach(persistent_syscall.key_value,
+				     &copy_syscall, thread_kv_store);
+
 		syscall_name = &syscall_name_full[strlen("syscall_exit_")];
 		break;
 	}
@@ -212,12 +233,9 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "unknown") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;
-			SyscallArgument *result =
-				(SyscallArgument *)g_hash_table_lookup(
-					persistent_syscall.key_value, "pid");
-			uint64_t pid = *((uint64_t *)result->data);
-			ds_write_umask_at_start(ds_module, pid);
+			ds_write_umask_at_start(ds_module, process_id);
 		}
+		CLEANUP_THREAD_LOCAL_SYSCALL()
 		CLEANUP_SYSCALL()
 		event_count++;
 		return;
@@ -242,6 +260,8 @@ void fsl_dump_values()
 
 	bt_common_write_record(ds_module, syscall_name, args, common_fields,
 			       v_args);
+
+	CLEANUP_THREAD_LOCAL_SYSCALL()
 	CLEANUP_SYSCALL()
 	event_count++;
 	return;
@@ -318,6 +338,40 @@ contains_thread(uint64_t thread_id)
 	return false;
 }
 
+__attribute__((always_inline)) inline static void
+copy_syscall(gpointer key, gpointer value, gpointer kv_store)
+{
+	SyscallArgument *arg_value = (SyscallArgument *)value;
+	SyscallArgument *copy_argument = malloc(sizeof(SyscallArgument));
+	switch (arg_value->type) {
+	case Integer: {
+		copy_argument->data = malloc(sizeof(uint64_t));
+		memcpy(copy_argument->data, arg_value->data, sizeof(uint64_t));
+		copy_argument->type = arg_value->type;
+		break;
+	}
+	case Double: {
+		copy_argument->data = malloc(sizeof(double));
+		memcpy(copy_argument->data, arg_value->data, sizeof(double));
+		copy_argument->type = arg_value->type;
+		break;
+	}
+	case String: {
+		char *str_value = (char *)arg_value->data;
+		copy_argument->data = malloc(strlen(str_value) + 1);
+		memcpy(copy_argument->data, arg_value->data,
+		       strlen(str_value) + 1);
+		copy_argument->type = arg_value->type;
+		break;
+	}
+	default:
+		break;
+	}
+
+	GHashTable *key_value_store =
+		((struct GenericSyscall *)kv_store)->key_value;
+	g_hash_table_insert(key_value_store, key, copy_argument);
+}
 
 __attribute__((always_inline)) inline static SyscallEvent
 syscall_event_type(char *event_name)
@@ -343,9 +397,14 @@ __attribute__((always_inline)) inline static void print_syscall_arguments()
 {
 	GHashTableIter iter;
 	gpointer key_test, value_test;
+	uint64_t thread_id = GET_THREAD_ID();
+	struct GenericSyscall *thread_kv_store =
+		(struct GenericSyscall *)g_hash_table_lookup(syscalls_kv_store,
+							     &thread_id);
 
-	g_hash_table_iter_init(&iter, persistent_syscall.key_value);
+	g_hash_table_iter_init(&iter, thread_kv_store->key_value);
 
+	printf("-------------------------------------------------------------\n");
 	while (g_hash_table_iter_next(&iter, &key_test, &value_test)) {
 		printf("{ key = %s, value = ", (char *)key_test);
 		SyscallArgument *argument = (SyscallArgument *)value_test;
@@ -366,8 +425,11 @@ __attribute__((always_inline)) inline static void print_syscall_arguments()
 			break;
 		}
 		default:
+			printf("%ld type = Unknown }\n",
+			       *(uint64_t *)argument->data);
 			break;
 		}
 	}
+	printf("-------------------------------------------------------------\n");
 }
 #endif
