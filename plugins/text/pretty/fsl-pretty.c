@@ -48,7 +48,7 @@ static GHashTable *syscall_handler_map = NULL;
 
 struct GenericSyscall persistent_syscall = {0};
 GHashTable *syscalls_kv_store = NULL;
-uint64_t event_count = 0;
+uint64_t event_count = 1;
 FILE *buffer_file = NULL;
 
 static bool isUmaskInitialized = false;
@@ -191,6 +191,14 @@ void fsl_dump_values()
 			g_hash_table_remove(persistent_syscall.key_value,
 					    "timestamp");
 		}
+		SyscallArgument *record_id_arg =
+			malloc(sizeof(SyscallArgument));
+		uint64_t *record_id_val = malloc(sizeof(uint64_t));
+		*record_id_val = event_count;
+		record_id_arg->type = Integer;
+		record_id_arg->data = (void *)record_id_val;
+
+		insert_value_to_hash_table("record_id", record_id_arg);
 
 		g_hash_table_foreach(persistent_syscall.key_value,
 				     &copy_syscall, thread_kv_store);
@@ -230,7 +238,13 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "rt_sigprocmask") == 0
 	    || strcmp(syscall_name, "brk") == 0
 	    || strcmp(syscall_name, "mprotect") == 0
-	    || strcmp(syscall_name, "unknown") == 0) {
+	    || strcmp(syscall_name, "unknown") == 0
+	    || strcmp(syscall_name, "set_tid_address") == 0
+	    || strcmp(syscall_name, "set_robust_list") == 0
+	    || strcmp(syscall_name, "getrlimit") == 0
+	    || strcmp(syscall_name, "clone") == 0
+            || strcmp(syscall_name, "futex") == 0
+            || strcmp(syscall_name, "madvise") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;
 			ds_write_umask_at_start(ds_module, process_id);

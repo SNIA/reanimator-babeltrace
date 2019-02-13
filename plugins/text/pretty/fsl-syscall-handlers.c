@@ -6,8 +6,11 @@ extern struct GenericSyscall persistent_syscall;
 extern GHashTable *syscalls_kv_store;
 extern FILE *buffer_file;
 extern uint64_t event_count;
+
+static uint64_t lookahead_buffer[1024] = {0};
+static uint64_t lookahead_index = 0;
 static char fakeBuffer[8192];
-void *buffer_ptr = NULL;
+static void *buffer_ptr = NULL;
 
 #define READ_SYSCALL_ARG(param, key)                                           \
 	SyscallArgument *param = NULL;                                         \
@@ -23,6 +26,8 @@ void *buffer_ptr = NULL;
 static long get_value_for_args(SyscallArgument *arg);
 static void set_buffer_to_vargs(long *args, void **v_args, uint64_t args_idx,
 				uint64_t v_args_idx, char *arg_name);
+static bool is_in_lookahead_buffer(uint64_t record_id);
+static void add_to_lookahead_buffer(uint64_t record_id);
 
 void access_syscall_handler(long *args, void **v_args)
 {
@@ -69,41 +74,66 @@ void close_syscall_handler(long *args, void **v_args)
 void read_syscall_handler(long *args, void **v_args)
 {
 	uint64_t event_id = 0, current_pos = 0;
+	uint64_t entry_event_count = 0;
+	uint64_t data_size = 0;
+	bool position_changed = false;
 
 	READ_SYSCALL_ARG(fd, "fd")
 	READ_SYSCALL_ARG(count, "count")
 	args[0] = get_value_for_args(fd);
 	args[2] = get_value_for_args(count);
 
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
 	current_pos = ftell(buffer_file);
 	fread(&event_id, sizeof(event_id), 1, buffer_file);
 
-	if (event_id == event_count) {
-		set_buffer_to_vargs(args, v_args, 1, 0, "buf");
-	} else {
+	while (is_in_lookahead_buffer(event_id)) {
+		printf("read system call event id %ld skipped\n", event_id);
+		fread(&data_size, sizeof(data_size), 1, buffer_file);
+		fseek(buffer_file, data_size, SEEK_CUR);
+		fread(&event_id, sizeof(event_id), 1, buffer_file);
+	}
+
+	while (event_id != entry_event_count) {
 		printf("read system call event ids are not matched %ld %ld\n",
-		       event_id, event_count);
+		       event_id, entry_event_count);
+		fread(&data_size, sizeof(data_size), 1, buffer_file);
+		fseek(buffer_file, data_size, SEEK_CUR);
+		position_changed = true;
+		fread(&event_id, sizeof(event_id), 1, buffer_file);
+	}
+
+	if (event_id == entry_event_count) {
+		set_buffer_to_vargs(args, v_args, 1, 0, "buf");
+	}
+
+	if (position_changed) {
+		add_to_lookahead_buffer(event_id);
 		fseek(buffer_file, current_pos, SEEK_SET);
-		v_args[0] = &fakeBuffer;
-		args[1] = (long)&fakeBuffer;
 	}
 }
 
 void stat_syscall_handler(long *args, void **v_args)
 {
 	uint64_t event_id = 0, current_pos = 0;
+	uint64_t entry_event_count = 0;
 
 	READ_SYSCALL_ARG(path, "path")
 	args[0] = get_value_for_args(path);
 
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
 	current_pos = ftell(buffer_file);
 	fread(&event_id, sizeof(event_id), 1, buffer_file);
 
-	if (event_id == event_count) {
+	if (event_id == entry_event_count) {
 		set_buffer_to_vargs(args, v_args, 1, 0, "buf");
 	} else {
 		printf("stat system call event ids are not matched %ld %ld\n",
-		       event_id, event_count);
+		       event_id, entry_event_count);
 		fseek(buffer_file, current_pos, SEEK_SET);
 		v_args[0] = &fakeBuffer;
 		args[1] = (long)&fakeBuffer;
@@ -113,18 +143,22 @@ void stat_syscall_handler(long *args, void **v_args)
 void fstat_syscall_handler(long *args, void **v_args)
 {
 	uint64_t event_id = 0, current_pos = 0;
+	uint64_t entry_event_count = 0;
 
 	READ_SYSCALL_ARG(fd, "fd")
 	args[0] = get_value_for_args(fd);
 
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
 	current_pos = ftell(buffer_file);
 	fread(&event_id, sizeof(event_id), 1, buffer_file);
 
-	if (event_id == event_count) {
+	if (event_id == entry_event_count) {
 		set_buffer_to_vargs(args, v_args, 1, 0, "buf");
 	} else {
-		printf("fstat system call event ids are not matched %ld %ld\n",
-		       event_id, event_count);
+		printf("stat system call event ids are not matched %ld %ld\n",
+		       event_id, entry_event_count);
 		fseek(buffer_file, current_pos, SEEK_SET);
 		v_args[0] = &fakeBuffer;
 		args[1] = (long)&fakeBuffer;
@@ -142,20 +176,24 @@ void munmap_syscall_handler(long *args, void **v_args)
 void write_syscall_handler(long *args, void **v_args)
 {
 	uint64_t event_id = 0, current_pos = 0;
+	uint64_t entry_event_count = 0;
 
 	READ_SYSCALL_ARG(fd, "fd")
 	READ_SYSCALL_ARG(count, "count")
 	args[0] = get_value_for_args(fd);
 	args[2] = get_value_for_args(count);
 
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
 	current_pos = ftell(buffer_file);
 	fread(&event_id, sizeof(event_id), 1, buffer_file);
 
-	if (event_id == event_count) {
+	if (event_id == entry_event_count) {
 		set_buffer_to_vargs(args, v_args, 1, 0, "buf");
 	} else {
-		printf("event ids are not matched %ld %ld\n", event_id,
-		       event_count);
+		printf("write event ids are not matched %ld %ld\n", event_id,
+		       entry_event_count);
 		fseek(buffer_file, current_pos, SEEK_SET);
 		v_args[0] = &fakeBuffer;
 		args[1] = (long)&fakeBuffer;
@@ -170,6 +208,25 @@ void lseek_syscall_handler(long *args, void **v_args)
 	args[0] = get_value_for_args(fd);
 	args[1] = get_value_for_args(offset);
 	args[2] = get_value_for_args(whence);
+}
+
+static bool is_in_lookahead_buffer(uint64_t record_id)
+{
+	for (int i = 0; i < 1024; i++) {
+		if (lookahead_buffer[i] == record_id) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static void add_to_lookahead_buffer(uint64_t record_id)
+{
+	if (lookahead_index == 1023) {
+		lookahead_index = 0;
+	}
+	lookahead_buffer[lookahead_index] = record_id;
+	lookahead_index++;
 }
 
 static long get_value_for_args(SyscallArgument *arg)
