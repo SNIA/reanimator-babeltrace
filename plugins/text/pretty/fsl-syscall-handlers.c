@@ -7,8 +7,7 @@ extern GHashTable *syscalls_kv_store;
 extern FILE *buffer_file;
 extern uint64_t event_count;
 
-static uint64_t lookahead_buffer[1024] = {0};
-static uint64_t lookahead_index = 0;
+static GHashTable *lookahead_cache = NULL;
 static char fakeBuffer[8192];
 static void *buffer_ptr = NULL;
 
@@ -26,8 +25,12 @@ static void *buffer_ptr = NULL;
 static long get_value_for_args(SyscallArgument *arg);
 static void set_buffer_to_vargs(long *args, void **v_args, uint64_t args_idx,
 				uint64_t v_args_idx, char *arg_name);
-static bool is_in_lookahead_buffer(uint64_t record_id);
-static void add_to_lookahead_buffer(uint64_t record_id);
+static void set_buffer_to_vargs_from_cache(long *args, void **v_args,
+					   uint64_t args_idx,
+					   uint64_t v_args_idx, char *arg_name,
+					   char *buffer_ptr);
+static void *is_in_lookahead_cache(uint64_t record_id);
+static void add_to_lookahead_cache(uint64_t record_id, void *buffer);
 
 void access_syscall_handler(long *args, void **v_args)
 {
@@ -73,10 +76,11 @@ void close_syscall_handler(long *args, void **v_args)
 
 void read_syscall_handler(long *args, void **v_args)
 {
-	uint64_t event_id = 0, current_pos = 0;
+	uint64_t event_id = 0;
 	uint64_t entry_event_count = 0;
 	uint64_t data_size = 0;
-	bool position_changed = false;
+	void *cached_buffer = NULL;
+	void *buffer = NULL;
 
 	READ_SYSCALL_ARG(fd, "fd")
 	READ_SYSCALL_ARG(count, "count")
@@ -86,32 +90,26 @@ void read_syscall_handler(long *args, void **v_args)
 	READ_SYSCALL_ARG(record_id, "record_id")
 	entry_event_count = get_value_for_args(record_id);
 
-	current_pos = ftell(buffer_file);
+	// current_pos = ftell(buffer_file);
 	fread(&event_id, sizeof(event_id), 1, buffer_file);
 
-	while (is_in_lookahead_buffer(event_id)) {
-		printf("read system call event id %ld skipped\n", event_id);
-		fread(&data_size, sizeof(data_size), 1, buffer_file);
-		fseek(buffer_file, data_size, SEEK_CUR);
-		fread(&event_id, sizeof(event_id), 1, buffer_file);
-	}
-
-	while (event_id != entry_event_count) {
-		printf("read system call event ids are not matched %ld %ld\n",
-		       event_id, entry_event_count);
-		fread(&data_size, sizeof(data_size), 1, buffer_file);
-		fseek(buffer_file, data_size, SEEK_CUR);
-		position_changed = true;
-		fread(&event_id, sizeof(event_id), 1, buffer_file);
-	}
-
-	if (event_id == entry_event_count) {
-		set_buffer_to_vargs(args, v_args, 1, 0, "buf");
-	}
-
-	if (position_changed) {
-		add_to_lookahead_buffer(event_id);
-		fseek(buffer_file, current_pos, SEEK_SET);
+	cached_buffer = is_in_lookahead_cache(event_id);
+	if (cached_buffer) {
+		set_buffer_to_vargs_from_cache(args, v_args, 1, 0, "buf",
+					       cached_buffer);
+	} else {
+		while (event_id != entry_event_count) {
+			printf("read system call event ids are not matched %ld %ld\n",
+			       event_id, entry_event_count);
+			fread(&data_size, sizeof(data_size), 1, buffer_file);
+			buffer = malloc(data_size);
+			fread(buffer, sizeof(char), data_size, buffer_file);
+			add_to_lookahead_cache(event_id, buffer);
+			fread(&event_id, sizeof(event_id), 1, buffer_file);
+		}
+		if (event_id == entry_event_count) {
+			set_buffer_to_vargs(args, v_args, 1, 0, "buf");
+		}
 	}
 }
 
@@ -210,23 +208,26 @@ void lseek_syscall_handler(long *args, void **v_args)
 	args[2] = get_value_for_args(whence);
 }
 
-static bool is_in_lookahead_buffer(uint64_t record_id)
+static void *is_in_lookahead_cache(uint64_t record_id)
 {
-	for (int i = 0; i < 1024; i++) {
-		if (lookahead_buffer[i] == record_id) {
-			return true;
-		}
+	if (lookahead_cache == NULL) {
+		lookahead_cache = g_hash_table_new(g_int64_hash, g_int64_equal);
+		return NULL;
 	}
-	return false;
+	return g_hash_table_lookup(lookahead_cache, &record_id);
 }
 
-static void add_to_lookahead_buffer(uint64_t record_id)
+static void add_to_lookahead_cache(uint64_t record_id, void *buffer)
 {
-	if (lookahead_index == 1023) {
-		lookahead_index = 0;
+	uint64_t *id;
+	id = (uint64_t *)malloc(sizeof(uint64_t));
+	*id = record_id;
+
+	if (lookahead_cache == NULL) {
+		lookahead_cache = g_hash_table_new_full(
+			g_int64_hash, g_int64_equal, NULL, NULL);
 	}
-	lookahead_buffer[lookahead_index] = record_id;
-	lookahead_index++;
+	g_hash_table_insert(lookahead_cache, id, buffer);
 }
 
 static long get_value_for_args(SyscallArgument *arg)
@@ -253,6 +254,24 @@ static void set_buffer_to_vargs(long *args, void **v_args, uint64_t args_idx,
 	fread(&data_size, sizeof(data_size), 1, buffer_file);
 	buffer_ptr = malloc(data_size);
 	fread(buffer_ptr, sizeof(char), data_size, buffer_file);
+	v_args[v_args_idx] = buffer_ptr;
+	args[args_idx] = (long)buffer_ptr;
+	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
+	argument->type = Integer;
+	argument->data = buffer_ptr;
+	uint64_t local_thread_id = GET_THREAD_ID();
+	struct GenericSyscall *thread_local_kv_store =
+		(struct GenericSyscall *)g_hash_table_lookup(syscalls_kv_store,
+							     &local_thread_id);
+	g_hash_table_insert(thread_local_kv_store->key_value, arg_name,
+			    (gpointer)argument);
+}
+
+static void set_buffer_to_vargs_from_cache(long *args, void **v_args,
+					   uint64_t args_idx,
+					   uint64_t v_args_idx, char *arg_name,
+					   char *buffer_ptr)
+{
 	v_args[v_args_idx] = buffer_ptr;
 	args[args_idx] = (long)buffer_ptr;
 	SyscallArgument *argument = malloc(sizeof(SyscallArgument));

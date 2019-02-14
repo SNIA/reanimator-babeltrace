@@ -1478,7 +1478,7 @@ end:
 	return ret;
 }
 
-// #define DEBUG_PRINT
+#define DEBUG_PRINT
 
 static
 int flush_buf(struct pretty_component *pretty)
