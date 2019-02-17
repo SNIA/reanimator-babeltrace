@@ -48,7 +48,6 @@ static GHashTable *syscall_handler_map = NULL;
 
 struct GenericSyscall persistent_syscall = {0};
 GHashTable *syscalls_kv_store = NULL;
-uint64_t event_count = 1;
 FILE *buffer_file = NULL;
 
 static bool isUmaskInitialized = false;
@@ -178,7 +177,6 @@ void fsl_dump_values()
 	case compat_event: {
 		CLEANUP_THREAD_LOCAL_SYSCALL()
 		CLEANUP_SYSCALL()
-		event_count++;
 		return;
 	}
 	case entry_event: {
@@ -191,19 +189,20 @@ void fsl_dump_values()
 			g_hash_table_remove(persistent_syscall.key_value,
 					    "timestamp");
 		}
-		SyscallArgument *record_id_arg =
-			malloc(sizeof(SyscallArgument));
-		uint64_t *record_id_val = malloc(sizeof(uint64_t));
-		*record_id_val = event_count;
-		record_id_arg->type = Integer;
-		record_id_arg->data = (void *)record_id_val;
 
-		insert_value_to_hash_table("record_id", record_id_arg);
+		gpointer record_id = g_hash_table_lookup(
+			persistent_syscall.key_value, "fsl_record_id");
+		if (record_id != NULL) {
+			insert_value_to_hash_table(
+				"record_id",
+				copy_syscall_argument(record_id));
+			g_hash_table_remove(persistent_syscall.key_value,
+					    "fsl_record_id");
+		}
 
 		g_hash_table_foreach(persistent_syscall.key_value,
 				     &copy_syscall, thread_kv_store);
 		CLEANUP_SYSCALL()
-		event_count++;
 		return;
 	}
 	case exit_event: {
@@ -243,15 +242,14 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "set_robust_list") == 0
 	    || strcmp(syscall_name, "getrlimit") == 0
 	    || strcmp(syscall_name, "clone") == 0
-            || strcmp(syscall_name, "futex") == 0
-            || strcmp(syscall_name, "madvise") == 0) {
+	    || strcmp(syscall_name, "futex") == 0
+	    || strcmp(syscall_name, "madvise") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;
 			ds_write_umask_at_start(ds_module, process_id);
 		}
 		CLEANUP_THREAD_LOCAL_SYSCALL()
 		CLEANUP_SYSCALL()
-		event_count++;
 		return;
 	}
 
@@ -277,7 +275,6 @@ void fsl_dump_values()
 
 	CLEANUP_THREAD_LOCAL_SYSCALL()
 	CLEANUP_SYSCALL()
-	event_count++;
 	return;
 }
 
