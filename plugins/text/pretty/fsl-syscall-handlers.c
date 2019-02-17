@@ -212,6 +212,23 @@ void lseek_syscall_handler(long *args, void **v_args)
 	args[2] = get_value_for_args(whence);
 }
 
+// TODO(Umit): FIX clone system call buffer reading
+int clone_parent_tid = 0, clone_child_tid = 0;
+void clone_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(clone_flags, "clone_flags")
+	READ_SYSCALL_ARG(newsp, "newsp")
+	READ_SYSCALL_ARG(parent_tid, "parent_tid")
+	READ_SYSCALL_ARG(child_tid, "child_tid")
+	args[0] = get_value_for_args(clone_flags);
+        args[1] = get_value_for_args(newsp);
+        args[2] = get_value_for_args(parent_tid);
+        args[3] = get_value_for_args(child_tid);
+        args[4] = 0; // for ctid
+        v_args[0] = &parent_tid;
+        v_args[1] = &child_tid;
+}
+
 static void *is_in_lookahead_cache(uint64_t record_id)
 {
 	if (lookahead_cache == NULL) {

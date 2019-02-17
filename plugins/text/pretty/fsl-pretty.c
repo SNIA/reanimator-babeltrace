@@ -78,6 +78,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("lseek", &lseek_syscall_handler)
 	ADD_SYSCALL_HANDLER("newfstat", &fstat_syscall_handler)
 	ADD_SYSCALL_HANDLER("stat", &stat_syscall_handler)
+	ADD_SYSCALL_HANDLER("clone", &clone_syscall_handler)
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
@@ -194,8 +195,7 @@ void fsl_dump_values()
 			persistent_syscall.key_value, "fsl_record_id");
 		if (record_id != NULL) {
 			insert_value_to_hash_table(
-				"record_id",
-				copy_syscall_argument(record_id));
+				"record_id", copy_syscall_argument(record_id));
 			g_hash_table_remove(persistent_syscall.key_value,
 					    "fsl_record_id");
 		}
@@ -206,6 +206,18 @@ void fsl_dump_values()
 		return;
 	}
 	case exit_event: {
+		syscall_name = &syscall_name_full[strlen("syscall_exit_")];
+
+		if (strcmp(syscall_name, "clone") == 0) {
+			SyscallArgument *ret_val = g_hash_table_lookup(
+				persistent_syscall.key_value, "ret");
+			if (*((uint64_t *)ret_val->data) == 0) {
+				CLEANUP_THREAD_LOCAL_SYSCALL()
+				CLEANUP_SYSCALL()
+				return;
+			}
+		}
+
 		gpointer timestamp = g_hash_table_lookup(
 			persistent_syscall.key_value, "timestamp");
 		if (timestamp != NULL) {
@@ -215,11 +227,8 @@ void fsl_dump_values()
 			g_hash_table_remove(persistent_syscall.key_value,
 					    "timestamp");
 		}
-
 		g_hash_table_foreach(persistent_syscall.key_value,
 				     &copy_syscall, thread_kv_store);
-
-		syscall_name = &syscall_name_full[strlen("syscall_exit_")];
 		break;
 	}
 	default:
@@ -241,12 +250,12 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "set_tid_address") == 0
 	    || strcmp(syscall_name, "set_robust_list") == 0
 	    || strcmp(syscall_name, "getrlimit") == 0
-	    || strcmp(syscall_name, "clone") == 0
 	    || strcmp(syscall_name, "futex") == 0
 	    || strcmp(syscall_name, "madvise") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;
 			ds_write_umask_at_start(ds_module, process_id);
+			ds_set_clone_ctid_index(ds_module, 3);
 		}
 		CLEANUP_THREAD_LOCAL_SYSCALL()
 		CLEANUP_SYSCALL()
@@ -256,7 +265,7 @@ void fsl_dump_values()
 	SET_COMMON_FIELDS(DS_COMMON_FIELD_TIME_CALLED, "entry_timestamp")
 	SET_COMMON_FIELDS(DS_COMMON_FIELD_TIME_RETURNED, "exit_timestamp")
 	SET_COMMON_FIELDS(DS_COMMON_FIELD_RETURN_VALUE, "ret")
-	SET_COMMON_FIELDS(DS_COMMON_FIELD_EXECUTING_PID, "pid")
+	SET_COMMON_FIELDS(DS_COMMON_FIELD_EXECUTING_PID, "tid")
 	SET_COMMON_FIELDS(DS_COMMON_FIELD_EXECUTING_TID, "tid")
 	common_fields[DS_COMMON_FIELD_ERRNO_NUMBER] = &errnoVal;
 

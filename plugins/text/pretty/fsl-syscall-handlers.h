@@ -15,5 +15,6 @@ void write_syscall_handler(long *args, void **v_args);
 void lseek_syscall_handler(long *args, void **v_args);
 void fstat_syscall_handler(long *args, void **v_args);
 void stat_syscall_handler(long *args, void **v_args);
+void clone_syscall_handler(long *args, void **v_args);
 
 #endif
