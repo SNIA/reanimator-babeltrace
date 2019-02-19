@@ -16,5 +16,15 @@ void lseek_syscall_handler(long *args, void **v_args);
 void fstat_syscall_handler(long *args, void **v_args);
 void stat_syscall_handler(long *args, void **v_args);
 void clone_syscall_handler(long *args, void **v_args);
+void truncate_syscall_handler(long *args, void **v_args);
+void ftruncate_syscall_handler(long *args, void **v_args);
+void link_syscall_handler(long *args, void **v_args);
+void linkat_syscall_handler(long *args, void **v_args);
+void unlink_syscall_handler(long *args, void **v_args);
+void flock_syscall_handler(long *args, void **v_args);
+void mkdir_syscall_handler(long *args, void **v_args);
+void openat_syscall_handler(long *args, void **v_args);
+void rename_syscall_handler(long *args, void **v_args);
+void rmdir_syscall_handler(long *args, void **v_args);
 
 #endif

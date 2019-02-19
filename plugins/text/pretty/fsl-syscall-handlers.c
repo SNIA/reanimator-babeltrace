@@ -166,6 +166,103 @@ void clone_syscall_handler(long *args, void **v_args)
 	v_args[1] = &child_tid;
 }
 
+void truncate_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(path, "path")
+	READ_SYSCALL_ARG(length, "length")
+	args[0] = get_value_for_args(path);
+	args[1] = get_value_for_args(length);
+	v_args[0] = path->data;
+}
+
+void ftruncate_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd")
+	READ_SYSCALL_ARG(length, "length")
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(length);
+}
+
+void link_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(oldname, "oldname")
+	READ_SYSCALL_ARG(newname, "newname")
+	args[0] = get_value_for_args(oldname);
+	args[1] = get_value_for_args(newname);
+	v_args[0] = oldname->data;
+	v_args[1] = newname->data;
+}
+
+void linkat_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(olddfd, "olddfd")
+	READ_SYSCALL_ARG(oldname, "oldname")
+	READ_SYSCALL_ARG(newdfd, "newdfd")
+	READ_SYSCALL_ARG(newname, "newname")
+	READ_SYSCALL_ARG(flags, "flags")
+	args[0] = get_value_for_args(olddfd);
+	args[1] = get_value_for_args(oldname);
+	args[2] = get_value_for_args(newdfd);
+	args[3] = get_value_for_args(newname);
+	args[4] = get_value_for_args(flags);
+	v_args[0] = oldname->data;
+	v_args[1] = newname->data;
+}
+
+void unlink_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(pathname, "pathname")
+	args[0] = get_value_for_args(pathname);
+	v_args[0] = pathname->data;
+}
+
+void flock_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(cmd, "cmd");
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(cmd);
+}
+
+void mkdir_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(mode, "mode");
+	args[0] = get_value_for_args(pathname);
+	args[1] = get_value_for_args(mode);
+	v_args[0] = pathname->data;
+}
+
+void openat_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(dfd, "dfd");
+	READ_SYSCALL_ARG(filename, "filename");
+	READ_SYSCALL_ARG(flags, "flags");
+	READ_SYSCALL_ARG(mode, "mode");
+	args[0] = get_value_for_args(dfd);
+	args[1] = get_value_for_args(filename);
+	args[2] = get_value_for_args(flags);
+	args[3] = get_value_for_args(mode);
+	v_args[0] = filename->data;
+}
+
+void rename_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(oldname, "oldname");
+	READ_SYSCALL_ARG(newname, "newname");
+	args[0] = get_value_for_args(oldname);
+	args[1] = get_value_for_args(newname);
+	v_args[0] = oldname->data;
+	v_args[1] = newname->data;
+}
+
+void rmdir_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(pathname, "pathname");
+	args[0] = get_value_for_args(pathname);
+	v_args[0] = pathname->data;
+}
+
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name)
 {

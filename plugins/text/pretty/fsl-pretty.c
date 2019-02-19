@@ -79,6 +79,17 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("newfstat", &fstat_syscall_handler)
 	ADD_SYSCALL_HANDLER("stat", &stat_syscall_handler)
 	ADD_SYSCALL_HANDLER("clone", &clone_syscall_handler)
+	ADD_SYSCALL_HANDLER("truncate", &truncate_syscall_handler)
+	ADD_SYSCALL_HANDLER("ftruncate", &ftruncate_syscall_handler)
+	ADD_SYSCALL_HANDLER("link", &link_syscall_handler)
+	ADD_SYSCALL_HANDLER("linkat", &linkat_syscall_handler)
+	ADD_SYSCALL_HANDLER("unlink", &unlink_syscall_handler)
+	ADD_SYSCALL_HANDLER("flock", &flock_syscall_handler)
+	ADD_SYSCALL_HANDLER("mkdir", &mkdir_syscall_handler)
+	ADD_SYSCALL_HANDLER("openat", &openat_syscall_handler)
+	ADD_SYSCALL_HANDLER("rename", &rename_syscall_handler)
+	ADD_SYSCALL_HANDLER("rmdir", &rmdir_syscall_handler)
+
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
