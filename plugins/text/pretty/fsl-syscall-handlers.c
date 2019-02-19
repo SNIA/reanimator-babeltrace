@@ -8,7 +8,6 @@ extern FILE *buffer_file;
 extern uint64_t event_count;
 
 static GHashTable *lookahead_cache = NULL;
-static char fakeBuffer[8192];
 static void *buffer_ptr = NULL;
 
 #define READ_SYSCALL_ARG(param, key)                                           \
@@ -29,6 +28,8 @@ static void set_buffer_to_vargs_from_cache(long *args, void **v_args,
 					   uint64_t args_idx,
 					   uint64_t v_args_idx, char *arg_name,
 					   char *buffer_ptr);
+static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
+		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name);
 static void *is_in_lookahead_cache(uint64_t record_id);
 static void add_to_lookahead_cache(uint64_t record_id, void *buffer);
 
@@ -76,12 +77,7 @@ void close_syscall_handler(long *args, void **v_args)
 
 void read_syscall_handler(long *args, void **v_args)
 {
-	uint64_t event_id = 0;
 	uint64_t entry_event_count = 0;
-	uint64_t data_size = 0;
-	uint64_t current_pos = 0;
-	void *cached_buffer = NULL;
-	void *buffer = NULL;
 
 	READ_SYSCALL_ARG(fd, "fd")
 	READ_SYSCALL_ARG(count, "count")
@@ -90,6 +86,94 @@ void read_syscall_handler(long *args, void **v_args)
 
 	READ_SYSCALL_ARG(record_id, "record_id")
 	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
+}
+
+void stat_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(path, "path")
+	args[0] = get_value_for_args(path);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
+}
+
+void fstat_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	args[0] = get_value_for_args(fd);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
+}
+
+void munmap_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(addr, "addr")
+	READ_SYSCALL_ARG(len, "len")
+	args[0] = get_value_for_args(addr);
+	args[1] = get_value_for_args(len);
+}
+
+void write_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	READ_SYSCALL_ARG(count, "count")
+	args[0] = get_value_for_args(fd);
+	args[2] = get_value_for_args(count);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
+}
+
+void lseek_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd")
+	READ_SYSCALL_ARG(offset, "offset")
+	READ_SYSCALL_ARG(whence, "whence")
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(offset);
+	args[2] = get_value_for_args(whence);
+}
+
+// TODO(Umit): FIX clone system call buffer reading
+int clone_parent_tid = 0, clone_child_tid = 0;
+void clone_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(clone_flags, "clone_flags")
+	READ_SYSCALL_ARG(newsp, "newsp")
+	READ_SYSCALL_ARG(parent_tid, "parent_tid")
+	READ_SYSCALL_ARG(child_tid, "child_tid")
+	args[0] = get_value_for_args(clone_flags);
+	args[1] = get_value_for_args(newsp);
+	args[2] = get_value_for_args(parent_tid);
+	args[3] = get_value_for_args(child_tid);
+	args[4] = 0; // for ctid
+	v_args[0] = &parent_tid;
+	v_args[1] = &child_tid;
+}
+
+static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
+		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name)
+{
+	uint64_t event_id = 0;
+	uint64_t data_size = 0;
+	uint64_t current_pos = 0;
+	void *cached_buffer = NULL;
+	void *buffer = NULL;
 
 	current_pos = ftell(buffer_file);
 	fread(&event_id, sizeof(event_id), 1, buffer_file);
@@ -115,118 +199,6 @@ void read_syscall_handler(long *args, void **v_args)
 			assert(0);
 		}
 	}
-}
-
-void stat_syscall_handler(long *args, void **v_args)
-{
-	uint64_t event_id = 0, current_pos = 0;
-	uint64_t entry_event_count = 0;
-
-	READ_SYSCALL_ARG(path, "path")
-	args[0] = get_value_for_args(path);
-
-	READ_SYSCALL_ARG(record_id, "record_id")
-	entry_event_count = get_value_for_args(record_id);
-
-	current_pos = ftell(buffer_file);
-	fread(&event_id, sizeof(event_id), 1, buffer_file);
-
-	if (event_id == entry_event_count) {
-		set_buffer_to_vargs(args, v_args, 1, 0, "buf");
-	} else {
-		printf("stat system call event ids are not matched %ld %ld\n",
-		       event_id, entry_event_count);
-		fseek(buffer_file, current_pos, SEEK_SET);
-		v_args[0] = &fakeBuffer;
-		args[1] = (long)&fakeBuffer;
-	}
-}
-
-void fstat_syscall_handler(long *args, void **v_args)
-{
-	uint64_t event_id = 0, current_pos = 0;
-	uint64_t entry_event_count = 0;
-
-	READ_SYSCALL_ARG(fd, "fd")
-	args[0] = get_value_for_args(fd);
-
-	READ_SYSCALL_ARG(record_id, "record_id")
-	entry_event_count = get_value_for_args(record_id);
-
-	current_pos = ftell(buffer_file);
-	fread(&event_id, sizeof(event_id), 1, buffer_file);
-
-	if (event_id == entry_event_count) {
-		set_buffer_to_vargs(args, v_args, 1, 0, "buf");
-	} else {
-		printf("stat system call event ids are not matched %ld %ld\n",
-		       event_id, entry_event_count);
-		fseek(buffer_file, current_pos, SEEK_SET);
-		v_args[0] = &fakeBuffer;
-		args[1] = (long)&fakeBuffer;
-	}
-}
-
-void munmap_syscall_handler(long *args, void **v_args)
-{
-	READ_SYSCALL_ARG(addr, "addr")
-	READ_SYSCALL_ARG(len, "len")
-	args[0] = get_value_for_args(addr);
-	args[1] = get_value_for_args(len);
-}
-
-void write_syscall_handler(long *args, void **v_args)
-{
-	uint64_t event_id = 0, current_pos = 0;
-	uint64_t entry_event_count = 0;
-
-	READ_SYSCALL_ARG(fd, "fd")
-	READ_SYSCALL_ARG(count, "count")
-	args[0] = get_value_for_args(fd);
-	args[2] = get_value_for_args(count);
-
-	READ_SYSCALL_ARG(record_id, "record_id")
-	entry_event_count = get_value_for_args(record_id);
-
-	current_pos = ftell(buffer_file);
-	fread(&event_id, sizeof(event_id), 1, buffer_file);
-
-	if (event_id == entry_event_count) {
-		set_buffer_to_vargs(args, v_args, 1, 0, "buf");
-	} else {
-		printf("write event ids are not matched %ld %ld\n", event_id,
-		       entry_event_count);
-		fseek(buffer_file, current_pos, SEEK_SET);
-		v_args[0] = &fakeBuffer;
-		args[1] = (long)&fakeBuffer;
-	}
-}
-
-void lseek_syscall_handler(long *args, void **v_args)
-{
-	READ_SYSCALL_ARG(fd, "fd")
-	READ_SYSCALL_ARG(offset, "offset")
-	READ_SYSCALL_ARG(whence, "whence")
-	args[0] = get_value_for_args(fd);
-	args[1] = get_value_for_args(offset);
-	args[2] = get_value_for_args(whence);
-}
-
-// TODO(Umit): FIX clone system call buffer reading
-int clone_parent_tid = 0, clone_child_tid = 0;
-void clone_syscall_handler(long *args, void **v_args)
-{
-	READ_SYSCALL_ARG(clone_flags, "clone_flags")
-	READ_SYSCALL_ARG(newsp, "newsp")
-	READ_SYSCALL_ARG(parent_tid, "parent_tid")
-	READ_SYSCALL_ARG(child_tid, "child_tid")
-	args[0] = get_value_for_args(clone_flags);
-        args[1] = get_value_for_args(newsp);
-        args[2] = get_value_for_args(parent_tid);
-        args[3] = get_value_for_args(child_tid);
-        args[4] = 0; // for ctid
-        v_args[0] = &parent_tid;
-        v_args[1] = &child_tid;
 }
 
 static void *is_in_lookahead_cache(uint64_t record_id)
