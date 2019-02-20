@@ -258,7 +258,7 @@ void fsl_dump_values()
 #ifdef FSL_PRETTY_VERBOSE
 	print_syscall_arguments();
 #endif
-
+        // TODO(Umit) clock_gettime? do we have to support
 	// TODO(Umit) finish all these call implementations
 	// TODO(Umit) look at unknown syscalls
 	if (strcmp(syscall_name, "execve") == 0
@@ -284,6 +284,7 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "set_robust_list") == 0
 	    || strcmp(syscall_name, "sigaltstack") == 0
 	    || strcmp(syscall_name, "poll") == 0
+            || strcmp(syscall_name, "clock_gettime") == 0
 	    || strcmp(syscall_name, "unknown") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;
