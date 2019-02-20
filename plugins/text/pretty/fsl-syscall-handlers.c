@@ -263,6 +263,14 @@ void rmdir_syscall_handler(long *args, void **v_args)
 	v_args[0] = pathname->data;
 }
 
+bool exit_generated_value = true;
+void exit_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(error_code, "error_code")
+	args[0] = get_value_for_args(error_code);
+	v_args[0] = &exit_generated_value;
+}
+
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name)
 {

@@ -26,5 +26,6 @@ void mkdir_syscall_handler(long *args, void **v_args);
 void openat_syscall_handler(long *args, void **v_args);
 void rename_syscall_handler(long *args, void **v_args);
 void rmdir_syscall_handler(long *args, void **v_args);
+void exit_syscall_handler(long *args, void **v_args);
 
 #endif

@@ -89,6 +89,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("openat", &openat_syscall_handler)
 	ADD_SYSCALL_HANDLER("rename", &rename_syscall_handler)
 	ADD_SYSCALL_HANDLER("rmdir", &rmdir_syscall_handler)
+	ADD_SYSCALL_HANDLER("exit", &exit_syscall_handler)
 
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
@@ -213,6 +214,15 @@ void fsl_dump_values()
 
 		g_hash_table_foreach(persistent_syscall.key_value,
 				     &copy_syscall, thread_kv_store);
+
+		syscall_name = &syscall_name_full[strlen("syscall_entry_")];
+		if (strcmp(syscall_name, "exit_group") == 0) {
+			syscall_name = "exit";
+		}
+		if (strcmp(syscall_name, "exit") == 0) {
+			break;
+		}
+
 		CLEANUP_SYSCALL()
 		return;
 	}
@@ -252,17 +262,29 @@ void fsl_dump_values()
 	// TODO(Umit) finish all these call implementations
 	// TODO(Umit) look at unknown syscalls
 	if (strcmp(syscall_name, "execve") == 0
-	    || strcmp(syscall_name, "wait4") == 0
-	    || strcmp(syscall_name, "rt_sigaction") == 0
-	    || strcmp(syscall_name, "rt_sigprocmask") == 0
+	    || strcmp(syscall_name, "getrlimit") == 0
 	    || strcmp(syscall_name, "brk") == 0
 	    || strcmp(syscall_name, "mprotect") == 0
-	    || strcmp(syscall_name, "unknown") == 0
+	    || strcmp(syscall_name, "arch_prctl") == 0
+	    || strcmp(syscall_name, "rt_sigaction") == 0
+	    || strcmp(syscall_name, "wait4") == 0
+	    || strcmp(syscall_name, "futex") == 0
+	    || strcmp(syscall_name, "select") == 0
+	    || strcmp(syscall_name, "rt_sigprocmask") == 0
+	    || strcmp(syscall_name, "mremap") == 0
+	    || strcmp(syscall_name, "madvise") == 0
+	    || strcmp(syscall_name, "rt_sigreturn") == 0
+	    || strcmp(syscall_name, "sigreturn") == 0
+	    || strcmp(syscall_name, "rt_sigsuspend") == 0
+	    || strcmp(syscall_name, "fadvise64") == 0
+	    || strcmp(syscall_name, "sched_getaffinity") == 0
+	    || strcmp(syscall_name, "uname") == 0
+	    || strcmp(syscall_name, "nanosleep") == 0
 	    || strcmp(syscall_name, "set_tid_address") == 0
 	    || strcmp(syscall_name, "set_robust_list") == 0
-	    || strcmp(syscall_name, "getrlimit") == 0
-	    || strcmp(syscall_name, "futex") == 0
-	    || strcmp(syscall_name, "madvise") == 0) {
+	    || strcmp(syscall_name, "sigaltstack") == 0
+	    || strcmp(syscall_name, "poll") == 0
+	    || strcmp(syscall_name, "unknown") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;
 			ds_write_umask_at_start(ds_module, process_id);
