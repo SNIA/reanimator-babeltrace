@@ -285,7 +285,8 @@ static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 
 	cached_buffer = is_in_lookahead_cache(entry_event_count);
 	if (cached_buffer) {
-		set_buffer_to_vargs_from_cache(args, v_args, 1, 0, "buf",
+		set_buffer_to_vargs_from_cache(args, v_args, args_idx,
+					       v_args_idx, arg_name,
 					       cached_buffer);
 		fseek(buffer_file, current_pos, SEEK_SET);
 	} else {
@@ -299,7 +300,8 @@ static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 			fread(&event_id, sizeof(event_id), 1, buffer_file);
 		}
 		if (event_id == entry_event_count) {
-			set_buffer_to_vargs(args, v_args, 1, 0, "buf");
+			set_buffer_to_vargs(args, v_args, args_idx, v_args_idx,
+					    arg_name);
 		} else {
 			assert(0);
 		}
