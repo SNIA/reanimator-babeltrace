@@ -558,6 +558,86 @@ void symlinkat_syscall_handler(long *args, void **v_args)
 	v_args[1] = newname->data;
 }
 
+void utime_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(filename, "filename")
+	args[0] = get_value_for_args(filename);
+	v_args[0] = filename->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 1, "times");
+}
+
+void utimensat_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(dirfd, "dirfd")
+	READ_SYSCALL_ARG(pathname, "pathname")
+	args[0] = get_value_for_args(dirfd);
+	args[1] = get_value_for_args(pathname);
+	args[3] = 0; // flags
+
+	v_args[0] = pathname->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 1, "times");
+}
+
+void mknod_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(pathname, "pathname")
+	READ_SYSCALL_ARG(mode, "mode")
+	READ_SYSCALL_ARG(dev, "dev")
+	args[0] = get_value_for_args(pathname);
+	args[1] = get_value_for_args(mode);
+	args[2] = get_value_for_args(dev);
+	v_args[0] = pathname->data;
+}
+
+void mknodat_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(dirfd, "dirfd")
+	READ_SYSCALL_ARG(pathname, "pathname")
+	READ_SYSCALL_ARG(mode, "mode")
+	READ_SYSCALL_ARG(dev, "dev")
+	args[0] = get_value_for_args(dirfd);
+	args[1] = get_value_for_args(pathname);
+	args[2] = get_value_for_args(mode);
+	args[3] = get_value_for_args(dev);
+	v_args[0] = pathname->data;
+}
+
+void pipe_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 0, 0, "pipefd");
+}
+
+void dup_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(oldfd, "oldfd")
+	args[0] = get_value_for_args(oldfd);
+}
+
+void dup2_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(oldfd, "oldfd")
+	READ_SYSCALL_ARG(newfd, "newfd")
+	args[0] = get_value_for_args(oldfd);
+	args[1] = get_value_for_args(newfd);
+}
+
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name)
 {

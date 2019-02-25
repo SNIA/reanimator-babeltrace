@@ -113,6 +113,14 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("fchmod", &fchmod_syscall_handler)
 	ADD_SYSCALL_HANDLER("symlinkat", &symlinkat_syscall_handler)
 	ADD_SYSCALL_HANDLER("unlinkat", &unlinkat_syscall_handler)
+	ADD_SYSCALL_HANDLER("utime", &utime_syscall_handler)
+	ADD_SYSCALL_HANDLER("utimes", &utime_syscall_handler)
+	ADD_SYSCALL_HANDLER("utimensat", &utimensat_syscall_handler)
+	ADD_SYSCALL_HANDLER("mknod", &mknod_syscall_handler)
+	ADD_SYSCALL_HANDLER("mknodat", &mknodat_syscall_handler)
+	ADD_SYSCALL_HANDLER("pipe", &pipe_syscall_handler)
+	ADD_SYSCALL_HANDLER("dup", &dup_syscall_handler)
+	ADD_SYSCALL_HANDLER("dup2", &dup2_syscall_handler)
 
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }

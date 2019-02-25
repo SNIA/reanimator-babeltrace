@@ -50,6 +50,12 @@ void umask_syscall_handler(long *args, void **v_args);
 void fchmod_syscall_handler(long *args, void **v_args);
 void symlinkat_syscall_handler(long *args, void **v_args);
 void unlinkat_syscall_handler(long *args, void **v_args);
-
+void utime_syscall_handler(long *args, void **v_args);
+void utimensat_syscall_handler(long *args, void **v_args);
+void mknod_syscall_handler(long *args, void **v_args);
+void mknodat_syscall_handler(long *args, void **v_args);
+void pipe_syscall_handler(long *args, void **v_args);
+void dup_syscall_handler(long *args, void **v_args);
+void dup2_syscall_handler(long *args, void **v_args);
 
 #endif
