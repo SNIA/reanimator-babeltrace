@@ -116,6 +116,19 @@ void fstat_syscall_handler(long *args, void **v_args)
 	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
 }
 
+void newfstat_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	args[0] = get_value_for_args(fd);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "statbuf");
+}
+
 void munmap_syscall_handler(long *args, void **v_args)
 {
 	READ_SYSCALL_ARG(addr, "addr")
@@ -271,6 +284,280 @@ void exit_syscall_handler(long *args, void **v_args)
 	v_args[0] = &exit_generated_value;
 }
 
+void fchmodat_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(dfd, "dfd");
+	READ_SYSCALL_ARG(filename, "filename");
+	READ_SYSCALL_ARG(mode, "mode");
+	args[0] = get_value_for_args(dfd);
+	args[1] = get_value_for_args(filename);
+	args[2] = get_value_for_args(mode);
+	args[3] = 0;
+	v_args[0] = filename->data;
+}
+
+void statfs_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(pathname, "pathname")
+	args[0] = get_value_for_args(pathname);
+	v_args[0] = pathname->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 1, "buf");
+}
+
+void fstatfs_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	args[0] = get_value_for_args(fd);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
+}
+
+void lstat_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(filename, "filename")
+	args[0] = get_value_for_args(filename);
+	v_args[0] = filename->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 1, "buf");
+}
+
+void newlstat_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(filename, "filename")
+	args[0] = get_value_for_args(filename);
+	v_args[0] = filename->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 1, "statbuf");
+}
+
+void fstatat_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(dfd, "dfd")
+	args[0] = get_value_for_args(dfd);
+
+	READ_SYSCALL_ARG(filename, "filename")
+	args[1] = get_value_for_args(filename);
+	v_args[0] = filename->data;
+
+	READ_SYSCALL_ARG(flag, "flag")
+	args[3] = get_value_for_args(flag);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 1, "buf");
+}
+
+void newfstatat_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(dfd, "dfd")
+	args[0] = get_value_for_args(dfd);
+
+	READ_SYSCALL_ARG(filename, "filename")
+	args[1] = get_value_for_args(filename);
+	v_args[0] = filename->data;
+
+	READ_SYSCALL_ARG(flag, "flag")
+	args[3] = get_value_for_args(flag);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 1, "statbuf");
+}
+
+void chown_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(filename, "filename");
+	READ_SYSCALL_ARG(user, "user");
+	READ_SYSCALL_ARG(group, "group");
+	args[0] = get_value_for_args(filename);
+	args[1] = get_value_for_args(user);
+	args[2] = get_value_for_args(group);
+	v_args[0] = filename->data;
+}
+
+void readlink_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(path, "path")
+	args[0] = get_value_for_args(path);
+	v_args[0] = path->data;
+
+	READ_SYSCALL_ARG(bufsiz, "bufsiz")
+	args[2] = get_value_for_args(bufsiz);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 1, "buf");
+}
+
+void fsync_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd")
+	args[0] = get_value_for_args(fd);
+}
+
+void pread_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	args[0] = get_value_for_args(fd);
+
+	READ_SYSCALL_ARG(count, "count")
+	args[2] = get_value_for_args(count);
+
+	READ_SYSCALL_ARG(pos, "pos")
+	args[3] = get_value_for_args(pos);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
+}
+
+void pwrite_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	args[0] = get_value_for_args(fd);
+
+	READ_SYSCALL_ARG(count, "count")
+	args[2] = get_value_for_args(count);
+
+	READ_SYSCALL_ARG(pos, "pos")
+	args[3] = get_value_for_args(pos);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
+}
+
+void chdir_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(filename, "filename");
+	args[0] = get_value_for_args(filename);
+	v_args[0] = filename->data;
+}
+
+void mkdirat_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(dfd, "dfd");
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(mode, "mode");
+	args[0] = get_value_for_args(dfd);
+	args[1] = get_value_for_args(pathname);
+	args[2] = get_value_for_args(mode);
+	v_args[0] = pathname->data;
+}
+
+void symlink_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(oldname, "oldname");
+	READ_SYSCALL_ARG(newname, "newname");
+	args[0] = get_value_for_args(oldname);
+	args[1] = get_value_for_args(newname);
+	v_args[0] = oldname->data;
+	v_args[1] = newname->data;
+}
+
+void creat_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(mode, "mode");
+	args[0] = get_value_for_args(pathname);
+	args[1] = get_value_for_args(mode);
+	v_args[0] = pathname->data;
+}
+
+void faccessat_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(dfd, "dfd");
+	READ_SYSCALL_ARG(filename, "filename");
+	READ_SYSCALL_ARG(mode, "mode");
+	args[0] = get_value_for_args(dfd);
+	args[1] = get_value_for_args(filename);
+	args[2] = get_value_for_args(mode);
+	args[3] = 0;
+	v_args[0] = filename->data;
+}
+
+void chmod_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(filename, "filename");
+	READ_SYSCALL_ARG(mode, "mode");
+	args[0] = get_value_for_args(filename);
+	args[1] = get_value_for_args(mode);
+	v_args[0] = filename->data;
+}
+
+void umask_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(mask, "mask");
+	args[0] = get_value_for_args(mask);
+}
+
+void fchmod_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(mode, "mode");
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(mode);
+}
+
+void unlinkat_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(dfd, "dfd");
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(flag, "flag");
+	args[0] = get_value_for_args(dfd);
+	args[1] = get_value_for_args(pathname);
+	args[2] = get_value_for_args(flag);
+	v_args[0] = pathname->data;
+}
+
+void symlinkat_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(oldname, "oldname");
+	READ_SYSCALL_ARG(newdfd, "newdfd");
+	READ_SYSCALL_ARG(newname, "newname");
+	args[0] = get_value_for_args(oldname);
+	args[1] = get_value_for_args(newdfd);
+	args[2] = get_value_for_args(newname);
+	v_args[0] = oldname->data;
+	v_args[1] = newname->data;
+}
+
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name)
 {
@@ -291,7 +578,7 @@ static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 		fseek(buffer_file, current_pos, SEEK_SET);
 	} else {
 		while (event_id != entry_event_count) {
-			printf("read system call event ids are not matched %ld %ld\n",
+			printf("system call event ids are not matched %ld %ld\n",
 			       event_id, entry_event_count);
 			fread(&data_size, sizeof(data_size), 1, buffer_file);
 			buffer = malloc(data_size);

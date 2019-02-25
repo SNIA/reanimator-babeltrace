@@ -76,7 +76,8 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("munmap", &munmap_syscall_handler)
 	ADD_SYSCALL_HANDLER("write", &write_syscall_handler)
 	ADD_SYSCALL_HANDLER("lseek", &lseek_syscall_handler)
-	ADD_SYSCALL_HANDLER("newfstat", &fstat_syscall_handler)
+	ADD_SYSCALL_HANDLER("fstat", &fstat_syscall_handler)
+	ADD_SYSCALL_HANDLER("newfstat", &newfstat_syscall_handler)
 	ADD_SYSCALL_HANDLER("stat", &stat_syscall_handler)
 	ADD_SYSCALL_HANDLER("clone", &clone_syscall_handler)
 	ADD_SYSCALL_HANDLER("truncate", &truncate_syscall_handler)
@@ -90,6 +91,28 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("rename", &rename_syscall_handler)
 	ADD_SYSCALL_HANDLER("rmdir", &rmdir_syscall_handler)
 	ADD_SYSCALL_HANDLER("exit", &exit_syscall_handler)
+	ADD_SYSCALL_HANDLER("fchmodat", &fchmodat_syscall_handler)
+	ADD_SYSCALL_HANDLER("statfs", &statfs_syscall_handler)
+	ADD_SYSCALL_HANDLER("fstatfs", &fstatfs_syscall_handler)
+	ADD_SYSCALL_HANDLER("lstat", &lstat_syscall_handler)
+	ADD_SYSCALL_HANDLER("newlstat", &newlstat_syscall_handler)
+	ADD_SYSCALL_HANDLER("fstatat", &fstatat_syscall_handler)
+	ADD_SYSCALL_HANDLER("newfstatat", &newfstatat_syscall_handler)
+	ADD_SYSCALL_HANDLER("chown", &chown_syscall_handler)
+	ADD_SYSCALL_HANDLER("readlink", &readlink_syscall_handler)
+	ADD_SYSCALL_HANDLER("fsync", &fsync_syscall_handler)
+	ADD_SYSCALL_HANDLER("pread64", &pread_syscall_handler)
+	ADD_SYSCALL_HANDLER("pwrite64", &pwrite_syscall_handler)
+	ADD_SYSCALL_HANDLER("chdir", &chdir_syscall_handler)
+	ADD_SYSCALL_HANDLER("mkdirat", &mkdirat_syscall_handler)
+	ADD_SYSCALL_HANDLER("symlink", &symlink_syscall_handler)
+	ADD_SYSCALL_HANDLER("creat", &creat_syscall_handler)
+	ADD_SYSCALL_HANDLER("faccessat", &faccessat_syscall_handler)
+	ADD_SYSCALL_HANDLER("chmod", &chmod_syscall_handler)
+	ADD_SYSCALL_HANDLER("umask", &umask_syscall_handler)
+	ADD_SYSCALL_HANDLER("fchmod", &fchmod_syscall_handler)
+	ADD_SYSCALL_HANDLER("symlinkat", &symlinkat_syscall_handler)
+	ADD_SYSCALL_HANDLER("unlinkat", &unlinkat_syscall_handler)
 
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
@@ -258,7 +281,7 @@ void fsl_dump_values()
 #ifdef FSL_PRETTY_VERBOSE
 	print_syscall_arguments();
 #endif
-        // TODO(Umit) clock_gettime? do we have to support
+	// TODO(Umit) clock_gettime? do we have to support
 	// TODO(Umit) finish all these call implementations
 	// TODO(Umit) look at unknown syscalls
 	if (strcmp(syscall_name, "execve") == 0
@@ -284,7 +307,7 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "set_robust_list") == 0
 	    || strcmp(syscall_name, "sigaltstack") == 0
 	    || strcmp(syscall_name, "poll") == 0
-            || strcmp(syscall_name, "clock_gettime") == 0
+	    || strcmp(syscall_name, "clock_gettime") == 0
 	    || strcmp(syscall_name, "unknown") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;
