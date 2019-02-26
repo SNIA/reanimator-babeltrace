@@ -1,6 +1,7 @@
 // Copyright FSL Stony Brook University
 
 #include "fsl-syscall-handlers.h"
+#include <fcntl.h>
 
 extern struct GenericSyscall persistent_syscall;
 extern GHashTable *syscalls_kv_store;
@@ -101,6 +102,20 @@ void stat_syscall_handler(long *args, void **v_args)
 	entry_event_count = get_value_for_args(record_id);
 
 	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
+}
+
+void newstat_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(filename, "filename")
+	args[0] = get_value_for_args(filename);
+        v_args[0] = filename->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 1, "statbuf");
 }
 
 void fstat_syscall_handler(long *args, void **v_args)
@@ -636,6 +651,78 @@ void dup2_syscall_handler(long *args, void **v_args)
 	READ_SYSCALL_ARG(newfd, "newfd")
 	args[0] = get_value_for_args(oldfd);
 	args[1] = get_value_for_args(newfd);
+}
+
+void fcntl_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	READ_SYSCALL_ARG(cmd, "cmd")
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(cmd);
+
+	if (args[1] == F_SETLK || args[1] == F_SETLKW || args[1] == F_GETLK) {
+		READ_SYSCALL_ARG(record_id, "record_id")
+		entry_event_count = get_value_for_args(record_id);
+
+		set_buffer(entry_event_count, args, v_args, 2, 0, "arg");
+	} else {
+		READ_SYSCALL_ARG(arg, "arg")
+		args[2] = get_value_for_args(arg);
+	}
+}
+
+void getdents_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	READ_SYSCALL_ARG(count, "count")
+	args[0] = get_value_for_args(fd);
+	args[2] = get_value_for_args(count);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "dirp");
+}
+
+void vfork_syscall_handler(long *args, void **v_args)
+{
+}
+
+void set_get_rlimit_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(resource, "resource")
+	args[0] = get_value_for_args(resource);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "rlim");
+}
+
+void setsid_syscall_handler(long *args, void **v_args)
+{
+}
+
+void setpgid_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(pid, "pid")
+	READ_SYSCALL_ARG(pgid, "pgid")
+	args[0] = get_value_for_args(pid);
+	args[1] = get_value_for_args(pgid);
+}
+
+void getpid_syscall_handler(long *args, void **v_args)
+{
+}
+
+void geteuid_syscall_handler(long *args, void **v_args)
+{
 }
 
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,

@@ -79,6 +79,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("fstat", &fstat_syscall_handler)
 	ADD_SYSCALL_HANDLER("newfstat", &newfstat_syscall_handler)
 	ADD_SYSCALL_HANDLER("stat", &stat_syscall_handler)
+	ADD_SYSCALL_HANDLER("newstat", &newstat_syscall_handler)
 	ADD_SYSCALL_HANDLER("clone", &clone_syscall_handler)
 	ADD_SYSCALL_HANDLER("truncate", &truncate_syscall_handler)
 	ADD_SYSCALL_HANDLER("ftruncate", &ftruncate_syscall_handler)
@@ -121,6 +122,15 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("pipe", &pipe_syscall_handler)
 	ADD_SYSCALL_HANDLER("dup", &dup_syscall_handler)
 	ADD_SYSCALL_HANDLER("dup2", &dup2_syscall_handler)
+	ADD_SYSCALL_HANDLER("fcntl", &fcntl_syscall_handler)
+	ADD_SYSCALL_HANDLER("getdents", &getdents_syscall_handler)
+	ADD_SYSCALL_HANDLER("vfork", &vfork_syscall_handler)
+	ADD_SYSCALL_HANDLER("setrlimit", &set_get_rlimit_syscall_handler)
+	ADD_SYSCALL_HANDLER("getrlimit", &set_get_rlimit_syscall_handler)
+	ADD_SYSCALL_HANDLER("setsid", &setsid_syscall_handler)
+	ADD_SYSCALL_HANDLER("setpgid", &setpgid_syscall_handler)
+	ADD_SYSCALL_HANDLER("getpid", &getpid_syscall_handler)
+	ADD_SYSCALL_HANDLER("geteuid", &getpid_syscall_handler)
 
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
@@ -270,6 +280,19 @@ void fsl_dump_values()
 			}
 		}
 
+		if (strcmp(syscall_name, "open") == 0) {
+			SyscallArgument *ret_val = g_hash_table_lookup(
+				persistent_syscall.key_value, "ret");
+			if (*((uint64_t *)ret_val->data) == -2) {
+				SyscallArgument *argument =
+					malloc(sizeof(SyscallArgument));
+				argument->type = Integer;
+				argument->data = malloc(sizeof(uint64_t));
+				*((uint64_t *)argument->data) = -1;
+				insert_value_to_hash_table("ret", argument);
+			}
+		}
+
 		gpointer timestamp = g_hash_table_lookup(
 			persistent_syscall.key_value, "timestamp");
 		if (timestamp != NULL) {
@@ -316,6 +339,8 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "sigaltstack") == 0
 	    || strcmp(syscall_name, "poll") == 0
 	    || strcmp(syscall_name, "clock_gettime") == 0
+	    || strcmp(syscall_name, "mincore") == 0
+	    || strcmp(syscall_name, "msync") == 0
 	    || strcmp(syscall_name, "unknown") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;

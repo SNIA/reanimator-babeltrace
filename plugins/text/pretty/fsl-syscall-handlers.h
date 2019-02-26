@@ -57,5 +57,14 @@ void mknodat_syscall_handler(long *args, void **v_args);
 void pipe_syscall_handler(long *args, void **v_args);
 void dup_syscall_handler(long *args, void **v_args);
 void dup2_syscall_handler(long *args, void **v_args);
+void fcntl_syscall_handler(long *args, void **v_args);
+void getdents_syscall_handler(long *args, void **v_args);
+void vfork_syscall_handler(long *args, void **v_args);
+void set_get_rlimit_syscall_handler(long *args, void **v_args);
+void setsid_syscall_handler(long *args, void **v_args);
+void setpgid_syscall_handler(long *args, void **v_args);
+void getpid_syscall_handler(long *args, void **v_args);
+void geteuid_syscall_handler(long *args, void **v_args);
+void newstat_syscall_handler(long *args, void **v_args);
 
 #endif
