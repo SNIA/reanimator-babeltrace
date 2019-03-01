@@ -110,7 +110,7 @@ void newstat_syscall_handler(long *args, void **v_args)
 
 	READ_SYSCALL_ARG(filename, "filename")
 	args[0] = get_value_for_args(filename);
-        v_args[0] = filename->data;
+	v_args[0] = filename->data;
 
 	READ_SYSCALL_ARG(record_id, "record_id")
 	entry_event_count = get_value_for_args(record_id);
@@ -435,6 +435,12 @@ void readlink_syscall_handler(long *args, void **v_args)
 }
 
 void fsync_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd")
+	args[0] = get_value_for_args(fd);
+}
+
+void fdatasync_syscall_handler(long *args, void **v_args)
 {
 	READ_SYSCALL_ARG(fd, "fd")
 	args[0] = get_value_for_args(fd);
