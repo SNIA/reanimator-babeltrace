@@ -281,7 +281,8 @@ void fsl_dump_values()
 			}
 		}
 
-		if (strcmp(syscall_name, "open") == 0) {
+		if (strcmp(syscall_name, "open") == 0 ||
+                    strcmp(syscall_name, "openat") == 0) {
 			SyscallArgument *ret_val = g_hash_table_lookup(
 				persistent_syscall.key_value, "ret");
 			if (*((uint64_t *)ret_val->data) == -2) {
