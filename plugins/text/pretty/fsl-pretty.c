@@ -133,6 +133,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("geteuid", &getpid_syscall_handler)
 	ADD_SYSCALL_HANDLER("fdatasync", &fdatasync_syscall_handler)
 	ADD_SYSCALL_HANDLER("fallocate", &fallocate_syscall_handler)
+	ADD_SYSCALL_HANDLER("readahead", &readahead_syscall_handler)
 
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
