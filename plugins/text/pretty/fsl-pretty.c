@@ -132,6 +132,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("getpid", &getpid_syscall_handler)
 	ADD_SYSCALL_HANDLER("geteuid", &getpid_syscall_handler)
 	ADD_SYSCALL_HANDLER("fdatasync", &fdatasync_syscall_handler)
+	ADD_SYSCALL_HANDLER("fallocate", &fallocate_syscall_handler)
 
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
@@ -281,8 +282,8 @@ void fsl_dump_values()
 			}
 		}
 
-		if (strcmp(syscall_name, "open") == 0 ||
-                    strcmp(syscall_name, "openat") == 0) {
+		if (strcmp(syscall_name, "open") == 0
+		    || strcmp(syscall_name, "openat") == 0) {
 			SyscallArgument *ret_val = g_hash_table_lookup(
 				persistent_syscall.key_value, "ret");
 			if (*((uint64_t *)ret_val->data) == -2) {
@@ -343,6 +344,7 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "clock_gettime") == 0
 	    || strcmp(syscall_name, "mincore") == 0
 	    || strcmp(syscall_name, "msync") == 0
+	    || strcmp(syscall_name, "prctl") == 0
 	    || strcmp(syscall_name, "unknown") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;

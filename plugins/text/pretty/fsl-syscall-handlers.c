@@ -446,6 +446,18 @@ void fdatasync_syscall_handler(long *args, void **v_args)
 	args[0] = get_value_for_args(fd);
 }
 
+void fallocate_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd")
+	READ_SYSCALL_ARG(mode, "mode")
+	READ_SYSCALL_ARG(offset, "offset")
+	READ_SYSCALL_ARG(len, "len")
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(mode);
+	args[2] = get_value_for_args(offset);
+	args[3] = get_value_for_args(len);
+}
+
 void pread_syscall_handler(long *args, void **v_args)
 {
 	uint64_t entry_event_count = 0;

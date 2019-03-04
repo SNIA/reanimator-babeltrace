@@ -39,6 +39,7 @@ void chown_syscall_handler(long *args, void **v_args);
 void readlink_syscall_handler(long *args, void **v_args);
 void fsync_syscall_handler(long *args, void **v_args);
 void fdatasync_syscall_handler(long *args, void **v_args);
+void fallocate_syscall_handler(long *args, void **v_args);
 void pread_syscall_handler(long *args, void **v_args);
 void pwrite_syscall_handler(long *args, void **v_args);
 void chdir_syscall_handler(long *args, void **v_args);
