@@ -2,6 +2,7 @@
 
 #include "fsl-syscall-handlers.h"
 #include <fcntl.h>
+#include <linux/fs.h>
 
 extern struct GenericSyscall persistent_syscall;
 extern GHashTable *syscalls_kv_store;
@@ -751,6 +752,29 @@ void getpid_syscall_handler(long *args, void **v_args)
 
 void geteuid_syscall_handler(long *args, void **v_args)
 {
+}
+
+void ioctl_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	READ_SYSCALL_ARG(cmd, "cmd")
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(cmd);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	switch (*(int *)cmd->data) {
+	case FS_IOC_GETVERSION: {
+		set_buffer(entry_event_count, args, v_args, 2, 0, "arg");
+		break;
+	}
+	default:
+		assert(0);
+		break;
+	}
 }
 
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,

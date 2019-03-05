@@ -69,5 +69,6 @@ void setpgid_syscall_handler(long *args, void **v_args);
 void getpid_syscall_handler(long *args, void **v_args);
 void geteuid_syscall_handler(long *args, void **v_args);
 void newstat_syscall_handler(long *args, void **v_args);
+void ioctl_syscall_handler(long *args, void **v_args);
 
 #endif
