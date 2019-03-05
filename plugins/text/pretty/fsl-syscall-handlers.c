@@ -766,7 +766,7 @@ void ioctl_syscall_handler(long *args, void **v_args)
 	READ_SYSCALL_ARG(record_id, "record_id")
 	entry_event_count = get_value_for_args(record_id);
 
-	switch (*(int *)cmd->data) {
+	switch (*(unsigned int *)cmd->data) {
 	case FS_IOC_GETVERSION: {
 		set_buffer(entry_event_count, args, v_args, 2, 0, "arg");
 		break;
