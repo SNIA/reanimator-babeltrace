@@ -759,11 +759,12 @@ static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 	uint64_t event_id = 0;
 	uint64_t data_size = 0;
 	uint64_t current_pos = 0;
+	uint64_t read_size = 0;
 	void *cached_buffer = NULL;
 	void *buffer = NULL;
 
 	current_pos = ftell(buffer_file);
-	fread(&event_id, sizeof(event_id), 1, buffer_file);
+	read_size = fread(&event_id, sizeof(event_id), 1, buffer_file);
 
 	cached_buffer = is_in_lookahead_cache(entry_event_count);
 	if (cached_buffer) {
@@ -772,20 +773,32 @@ static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 					       cached_buffer);
 		fseek(buffer_file, current_pos, SEEK_SET);
 	} else {
-		while (event_id != entry_event_count) {
+		while (event_id != entry_event_count && read_size > 0) {
 			printf("system call event ids are not matched %ld %ld\n",
 			       event_id, entry_event_count);
-			fread(&data_size, sizeof(data_size), 1, buffer_file);
-			buffer = malloc(data_size);
-			fread(buffer, sizeof(char), data_size, buffer_file);
-			add_to_lookahead_cache(event_id, buffer);
-			fread(&event_id, sizeof(event_id), 1, buffer_file);
+			if (fread(&data_size, sizeof(data_size), 1, buffer_file)
+			    > 0) {
+				buffer = malloc(data_size);
+				if (fread(buffer, sizeof(char), data_size,
+					  buffer_file)
+				    > 0) {
+					add_to_lookahead_cache(event_id,
+							       buffer);
+				} else {
+					assert(0);
+				}
+				read_size = fread(&event_id, sizeof(event_id),
+						  1, buffer_file);
+			} else {
+				assert(0);
+			}
 		}
 		if (event_id == entry_event_count) {
 			set_buffer_to_vargs(args, v_args, args_idx, v_args_idx,
 					    arg_name);
 		} else {
-			assert(0);
+			v_args[v_args_idx] = NULL;
+			args[args_idx] = 0;
 		}
 	}
 }
