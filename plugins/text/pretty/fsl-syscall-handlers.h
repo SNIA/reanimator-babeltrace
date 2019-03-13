@@ -70,5 +70,18 @@ void getpid_syscall_handler(long *args, void **v_args);
 void geteuid_syscall_handler(long *args, void **v_args);
 void newstat_syscall_handler(long *args, void **v_args);
 void ioctl_syscall_handler(long *args, void **v_args);
+void newstat_syscall_handler(long *args, void **v_args);
+void listxattr_syscall_handler(long *args, void **v_args);
+void llistxattr_syscall_handler(long *args, void **v_args);
+void flistxattr_syscall_handler(long *args, void **v_args);
+void removexattr_syscall_handler(long *args, void **v_args);
+void lremovexattr_syscall_handler(long *args, void **v_args);
+void fremovexattr_syscall_handler(long *args, void **v_args);
+void lsetxattr_syscall_handler(long *args, void **v_args);
+void setxattr_syscall_handler(long *args, void **v_args);
+void fsetxattr_syscall_handler(long *args, void **v_args);
+void lgetxattr_syscall_handler(long *args, void **v_args);
+void getxattr_syscall_handler(long *args, void **v_args);
+void fgetxattr_syscall_handler(long *args, void **v_args);
 
 #endif

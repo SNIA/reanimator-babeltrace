@@ -135,6 +135,18 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("fallocate", &fallocate_syscall_handler)
 	ADD_SYSCALL_HANDLER("readahead", &readahead_syscall_handler)
 	ADD_SYSCALL_HANDLER("ioctl", &ioctl_syscall_handler)
+	ADD_SYSCALL_HANDLER("listxattr", &listxattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("llistxattr", &llistxattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("flistxattr", &flistxattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("removexattr", &removexattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("lremovexattr", &lremovexattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("fremovexattr", &fremovexattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("setxattr", &setxattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("lsetxattr", &lsetxattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("fsetxattr", &fsetxattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("getxattr", &getxattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("lgetxattr", &lgetxattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("fgetxattr", &fgetxattr_syscall_handler)
 
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }

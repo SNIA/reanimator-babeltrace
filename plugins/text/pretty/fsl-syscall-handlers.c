@@ -777,6 +777,206 @@ void ioctl_syscall_handler(long *args, void **v_args)
 	}
 }
 
+void listxattr_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(pathname, "pathname");
+	args[0] = get_value_for_args(pathname);
+	v_args[0] = pathname->data;
+
+	READ_SYSCALL_ARG(size, "size");
+	args[2] = get_value_for_args(size);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 1, "list");
+}
+
+void llistxattr_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(pathname, "pathname");
+	args[0] = get_value_for_args(pathname);
+	v_args[0] = pathname->data;
+
+	READ_SYSCALL_ARG(size, "size");
+	args[2] = get_value_for_args(size);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 1, "list");
+}
+
+void flistxattr_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	args[0] = get_value_for_args(fd);
+
+	READ_SYSCALL_ARG(size, "size");
+	args[2] = get_value_for_args(size);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "list");
+}
+
+void removexattr_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(name, "name");
+	args[0] = get_value_for_args(pathname);
+	args[1] = get_value_for_args(name);
+	v_args[0] = pathname->data;
+	v_args[1] = name->data;
+}
+
+void lremovexattr_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(name, "name");
+	args[0] = get_value_for_args(pathname);
+	args[1] = get_value_for_args(name);
+	v_args[0] = pathname->data;
+	v_args[1] = name->data;
+}
+
+void fremovexattr_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(name, "name");
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(name);
+	v_args[0] = name->data;
+}
+
+void lsetxattr_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(name, "name");
+	READ_SYSCALL_ARG(size, "size");
+	READ_SYSCALL_ARG(flags, "flags");
+	args[0] = get_value_for_args(pathname);
+	args[1] = get_value_for_args(name);
+	args[3] = get_value_for_args(size);
+	args[4] = get_value_for_args(flags);
+	v_args[0] = pathname->data;
+	v_args[1] = name->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 2, "value");
+}
+
+void setxattr_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(name, "name");
+	READ_SYSCALL_ARG(size, "size");
+	READ_SYSCALL_ARG(flags, "flags");
+	args[0] = get_value_for_args(pathname);
+	args[1] = get_value_for_args(name);
+	args[3] = get_value_for_args(size);
+	args[4] = get_value_for_args(flags);
+	v_args[0] = pathname->data;
+	v_args[1] = name->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 2, "value");
+}
+
+void fsetxattr_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(name, "name");
+	READ_SYSCALL_ARG(size, "size");
+	READ_SYSCALL_ARG(flags, "flags");
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(name);
+	args[3] = get_value_for_args(size);
+	args[4] = get_value_for_args(flags);
+	v_args[0] = name->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 1, "value");
+}
+
+void lgetxattr_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(name, "name");
+	READ_SYSCALL_ARG(size, "size");
+	args[0] = get_value_for_args(pathname);
+	args[1] = get_value_for_args(name);
+	args[3] = get_value_for_args(size);
+
+	v_args[0] = pathname->data;
+	v_args[1] = name->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 2, "value");
+}
+
+void getxattr_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(pathname, "pathname");
+	READ_SYSCALL_ARG(name, "name");
+	READ_SYSCALL_ARG(size, "size");
+	args[0] = get_value_for_args(pathname);
+	args[1] = get_value_for_args(name);
+	args[3] = get_value_for_args(size);
+
+	v_args[0] = pathname->data;
+	v_args[1] = name->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 2, "value");
+}
+
+void fgetxattr_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(name, "name");
+	READ_SYSCALL_ARG(size, "size");
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(name);
+	args[3] = get_value_for_args(size);
+
+	v_args[0] = name->data;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 1, "value");
+}
+
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name)
 {
