@@ -670,7 +670,7 @@ void pipe_syscall_handler(long *args, void **v_args)
 
 void dup_syscall_handler(long *args, void **v_args)
 {
-	READ_SYSCALL_ARG(oldfd, "oldfd")
+	READ_SYSCALL_ARG(oldfd, "fildes")
 	args[0] = get_value_for_args(oldfd);
 }
 

@@ -332,9 +332,24 @@ void fsl_dump_values()
 	// TODO(Umit) clock_gettime? do we have to support
 	// TODO(Umit) finish all these call implementations
 	// TODO(Umit) look at unknown syscalls
-	if (strcmp(syscall_name, "execve") == 0
-	    || strcmp(syscall_name, "getrlimit") == 0
+	if (strcmp(syscall_name, "execve") == 0		// have to fix
+	    || strcmp(syscall_name, "getrlimit") == 0   // have to fix
+	    || strcmp(syscall_name, "socket") == 0      // have to fix
+	    || strcmp(syscall_name, "getsockname") == 0 // have to fix
+	    || strcmp(syscall_name, "bind") == 0	// have to fix
+	    || strcmp(syscall_name, "recvmsg") == 0     // have to fix
+	    || strcmp(syscall_name, "recvfrom") == 0    // have to fix
+	    || strcmp(syscall_name, "listen") == 0      // have to fix
+	    || strcmp(syscall_name, "setsockopt") == 0  // have to fix
+	    || strcmp(syscall_name, "getsockopt") == 0  // have to fix
+	    || strcmp(syscall_name, "sendto") == 0      // have to fix
+	    || strcmp(syscall_name, "accept") == 0      // have to fix
+	    || strcmp(syscall_name, "connect") == 0     // have to fix
 	    || strcmp(syscall_name, "brk") == 0
+	    || strcmp(syscall_name, "shmget") == 0
+	    || strcmp(syscall_name, "shmdt") == 0
+	    || strcmp(syscall_name, "shmctl") == 0
+	    || strcmp(syscall_name, "shmat") == 0
 	    || strcmp(syscall_name, "mprotect") == 0
 	    || strcmp(syscall_name, "arch_prctl") == 0
 	    || strcmp(syscall_name, "rt_sigaction") == 0
@@ -359,6 +374,10 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "mincore") == 0
 	    || strcmp(syscall_name, "msync") == 0
 	    || strcmp(syscall_name, "prctl") == 0
+	    || strcmp(syscall_name, "kill") == 0    // untraced
+	    || strcmp(syscall_name, "getcwd") == 0  // untraced
+	    || strcmp(syscall_name, "getuid") == 0  // untraced
+	    || strcmp(syscall_name, "getppid") == 0 // untraced
 	    || strcmp(syscall_name, "unknown") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;
