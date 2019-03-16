@@ -977,6 +977,69 @@ void fgetxattr_syscall_handler(long *args, void **v_args)
 	set_buffer(entry_event_count, args, v_args, 2, 1, "value");
 }
 
+void socket_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(domain, "family");
+	READ_SYSCALL_ARG(type, "type");
+	READ_SYSCALL_ARG(protocol, "protocol");
+	args[0] = get_value_for_args(domain);
+	args[1] = get_value_for_args(type);
+	args[2] = get_value_for_args(protocol);
+}
+
+void bind_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(addrlen, "addrlen");
+	args[0] = get_value_for_args(fd);
+	args[2] = get_value_for_args(addrlen);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "umyaddr");
+}
+
+void listen_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(backlog, "backlog");
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(backlog);
+}
+
+void accept_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(addrlen, "upeer_addrlen");
+	args[0] = get_value_for_args(fd);
+	args[2] = get_value_for_args(addrlen);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "upeer_sockaddr");
+}
+
+void connect_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(addrlen, "addrlen");
+	args[0] = get_value_for_args(fd);
+	args[2] = get_value_for_args(addrlen);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "uservaddr");
+}
+
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name)
 {

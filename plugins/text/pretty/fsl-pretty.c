@@ -147,6 +147,11 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("getxattr", &getxattr_syscall_handler)
 	ADD_SYSCALL_HANDLER("lgetxattr", &lgetxattr_syscall_handler)
 	ADD_SYSCALL_HANDLER("fgetxattr", &fgetxattr_syscall_handler)
+	ADD_SYSCALL_HANDLER("socket", &socket_syscall_handler)
+	ADD_SYSCALL_HANDLER("bind", &bind_syscall_handler)
+	ADD_SYSCALL_HANDLER("listen", &listen_syscall_handler)
+	ADD_SYSCALL_HANDLER("accept", &accept_syscall_handler)
+	ADD_SYSCALL_HANDLER("connect", &connect_syscall_handler)
 
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
@@ -334,17 +339,12 @@ void fsl_dump_values()
 	// TODO(Umit) look at unknown syscalls
 	if (strcmp(syscall_name, "execve") == 0		// have to fix
 	    || strcmp(syscall_name, "getrlimit") == 0   // have to fix
-	    || strcmp(syscall_name, "socket") == 0      // have to fix
 	    || strcmp(syscall_name, "getsockname") == 0 // have to fix
-	    || strcmp(syscall_name, "bind") == 0	// have to fix
 	    || strcmp(syscall_name, "recvmsg") == 0     // have to fix
 	    || strcmp(syscall_name, "recvfrom") == 0    // have to fix
-	    || strcmp(syscall_name, "listen") == 0      // have to fix
 	    || strcmp(syscall_name, "setsockopt") == 0  // have to fix
 	    || strcmp(syscall_name, "getsockopt") == 0  // have to fix
 	    || strcmp(syscall_name, "sendto") == 0      // have to fix
-	    || strcmp(syscall_name, "accept") == 0      // have to fix
-	    || strcmp(syscall_name, "connect") == 0     // have to fix
 	    || strcmp(syscall_name, "brk") == 0
 	    || strcmp(syscall_name, "shmget") == 0
 	    || strcmp(syscall_name, "shmdt") == 0

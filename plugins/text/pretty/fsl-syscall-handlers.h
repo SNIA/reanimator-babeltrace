@@ -83,5 +83,10 @@ void fsetxattr_syscall_handler(long *args, void **v_args);
 void lgetxattr_syscall_handler(long *args, void **v_args);
 void getxattr_syscall_handler(long *args, void **v_args);
 void fgetxattr_syscall_handler(long *args, void **v_args);
+void socket_syscall_handler(long *args, void **v_args);
+void bind_syscall_handler(long *args, void **v_args);
+void listen_syscall_handler(long *args, void **v_args);
+void accept_syscall_handler(long *args, void **v_args);
+void connect_syscall_handler(long *args, void **v_args);
 
 #endif
