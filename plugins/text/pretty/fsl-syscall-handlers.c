@@ -1040,6 +1040,48 @@ void connect_syscall_handler(long *args, void **v_args)
 	set_buffer(entry_event_count, args, v_args, 1, 0, "uservaddr");
 }
 
+void setsockopt_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(level, "level");
+	READ_SYSCALL_ARG(optname, "optname");
+	READ_SYSCALL_ARG(optlen, "optlen");
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(level);
+	args[2] = get_value_for_args(optname);
+	args[4] = get_value_for_args(optlen);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 3, 0, "optval");
+}
+
+static long s_optlen = 0;
+void getsockopt_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(level, "level");
+	READ_SYSCALL_ARG(optname, "optname");
+	READ_SYSCALL_ARG(optlen, "optlen");
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(level);
+	args[2] = get_value_for_args(optname);
+	args[4] = get_value_for_args(optlen);
+
+	s_optlen = args[4];
+	v_args[0] = &s_optlen;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 3, 1, "optval");
+}
+
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name)
 {

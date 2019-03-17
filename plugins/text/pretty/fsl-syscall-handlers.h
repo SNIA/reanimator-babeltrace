@@ -88,5 +88,7 @@ void bind_syscall_handler(long *args, void **v_args);
 void listen_syscall_handler(long *args, void **v_args);
 void accept_syscall_handler(long *args, void **v_args);
 void connect_syscall_handler(long *args, void **v_args);
+void setsockopt_syscall_handler(long *args, void **v_args);
+void getsockopt_syscall_handler(long *args, void **v_args);
 
 #endif
