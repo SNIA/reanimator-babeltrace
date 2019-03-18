@@ -2,6 +2,7 @@
 
 #include "fsl-syscall-handlers.h"
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <linux/fs.h>
 
 extern struct GenericSyscall persistent_syscall;
@@ -767,7 +768,10 @@ void ioctl_syscall_handler(long *args, void **v_args)
 	entry_event_count = get_value_for_args(record_id);
 
 	switch (*(unsigned int *)cmd->data) {
-	case FS_IOC_GETVERSION: {
+	case FS_IOC_GETVERSION:
+	case TIOCGPGRP:
+	case TIOCGWINSZ:
+	case TCGETS: {
 		set_buffer(entry_event_count, args, v_args, 2, 0, "arg");
 		break;
 	}
@@ -987,6 +991,23 @@ void socket_syscall_handler(long *args, void **v_args)
 	args[2] = get_value_for_args(protocol);
 }
 
+void socketpair_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(domain, "family");
+	READ_SYSCALL_ARG(type, "type");
+	READ_SYSCALL_ARG(protocol, "protocol");
+	args[0] = get_value_for_args(domain);
+	args[1] = get_value_for_args(type);
+	args[2] = get_value_for_args(protocol);
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 3, 0, "sv");
+}
+
 void bind_syscall_handler(long *args, void **v_args)
 {
 	uint64_t entry_event_count = 0;
@@ -1080,6 +1101,14 @@ void getsockopt_syscall_handler(long *args, void **v_args)
 	entry_event_count = get_value_for_args(record_id);
 
 	set_buffer(entry_event_count, args, v_args, 3, 1, "optval");
+}
+
+void shutdown_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(how, "how");
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(how);
 }
 
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,

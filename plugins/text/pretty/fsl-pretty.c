@@ -148,12 +148,14 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("lgetxattr", &lgetxattr_syscall_handler)
 	ADD_SYSCALL_HANDLER("fgetxattr", &fgetxattr_syscall_handler)
 	ADD_SYSCALL_HANDLER("socket", &socket_syscall_handler)
+	ADD_SYSCALL_HANDLER("socketpair", &socketpair_syscall_handler)
 	ADD_SYSCALL_HANDLER("bind", &bind_syscall_handler)
 	ADD_SYSCALL_HANDLER("listen", &listen_syscall_handler)
 	ADD_SYSCALL_HANDLER("accept", &accept_syscall_handler)
 	ADD_SYSCALL_HANDLER("connect", &connect_syscall_handler)
 	ADD_SYSCALL_HANDLER("setsockopt", &setsockopt_syscall_handler)
 	ADD_SYSCALL_HANDLER("getsockopt", &getsockopt_syscall_handler)
+	ADD_SYSCALL_HANDLER("shutdown", &shutdown_syscall_handler)
 
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
@@ -339,45 +341,80 @@ void fsl_dump_values()
 	// TODO(Umit) clock_gettime? do we have to support
 	// TODO(Umit) finish all these call implementations
 	// TODO(Umit) look at unknown syscalls
-	if (strcmp(syscall_name, "execve") == 0		// have to fix
-	    || strcmp(syscall_name, "getrlimit") == 0   // have to fix
-	    || strcmp(syscall_name, "getsockname") == 0 // have to fix
-	    || strcmp(syscall_name, "recvmsg") == 0     // have to fix
-	    || strcmp(syscall_name, "recvfrom") == 0    // have to fix
-	    || strcmp(syscall_name, "sendto") == 0      // have to fix
+	if (strcmp(syscall_name, "execve") == 0		 // have to fix
+	    || strcmp(syscall_name, "getrlimit") == 0    // have to fix
+	    || strcmp(syscall_name, "getsockname") == 0  // have to fix
+	    || strcmp(syscall_name, "recvmsg") == 0      // have to fix
+	    || strcmp(syscall_name, "recvfrom") == 0     // have to fix
+	    || strcmp(syscall_name, "sendto") == 0       // have to fix
+	    || strcmp(syscall_name, "shmget") == 0       // ??
+	    || strcmp(syscall_name, "shmctl") == 0       // ??
+	    || strcmp(syscall_name, "shmat") == 0	// ??
+	    || strcmp(syscall_name, "times") == 0	// ??
+	    || strcmp(syscall_name, "shmdt") == 0	// ??
+	    || strcmp(syscall_name, "io_setup") == 0     // ??
+	    || strcmp(syscall_name, "io_submit") == 0    // ??
+	    || strcmp(syscall_name, "io_getevents") == 0 // ??
+	    || strcmp(syscall_name, "gettid") == 0
+	    || strcmp(syscall_name, "getpgid") == 0
+	    || strcmp(syscall_name, "getpgrp") == 0
+	    || strcmp(syscall_name, "getsid") == 0
+	    || strcmp(syscall_name, "setresuid") == 0
+	    || strcmp(syscall_name, "getresuid") == 0
+	    || strcmp(syscall_name, "setresgid") == 0
+	    || strcmp(syscall_name, "getresgid") == 0
+	    || strcmp(syscall_name, "pipe2") == 0
 	    || strcmp(syscall_name, "brk") == 0
-	    || strcmp(syscall_name, "shmget") == 0
-	    || strcmp(syscall_name, "shmdt") == 0
-	    || strcmp(syscall_name, "shmctl") == 0
-	    || strcmp(syscall_name, "shmat") == 0
 	    || strcmp(syscall_name, "mprotect") == 0
 	    || strcmp(syscall_name, "arch_prctl") == 0
-	    || strcmp(syscall_name, "rt_sigaction") == 0
 	    || strcmp(syscall_name, "wait4") == 0
 	    || strcmp(syscall_name, "futex") == 0
 	    || strcmp(syscall_name, "select") == 0
+	    || strcmp(syscall_name, "rt_sigaction") == 0
 	    || strcmp(syscall_name, "rt_sigprocmask") == 0
+	    || strcmp(syscall_name, "rt_sigreturn") == 0
+	    || strcmp(syscall_name, "rt_sigsuspend") == 0
+	    || strcmp(syscall_name, "rt_sigtimedwait") == 0
+	    || strcmp(syscall_name, "sigreturn") == 0
+	    || strcmp(syscall_name, "alarm") == 0
 	    || strcmp(syscall_name, "mremap") == 0
 	    || strcmp(syscall_name, "madvise") == 0
-	    || strcmp(syscall_name, "rt_sigreturn") == 0
-	    || strcmp(syscall_name, "sigreturn") == 0
-	    || strcmp(syscall_name, "rt_sigsuspend") == 0
 	    || strcmp(syscall_name, "fadvise64") == 0
+	    || strcmp(syscall_name, "get_mempolicy") == 0
+	    || strcmp(syscall_name, "mbind") == 0
+	    || strcmp(syscall_name, "sched_yield") == 0
 	    || strcmp(syscall_name, "sched_getaffinity") == 0
+	    || strcmp(syscall_name, "sched_setaffinity") == 0
+	    || strcmp(syscall_name, "setpriority") == 0
+	    || strcmp(syscall_name, "getpriority") == 0
+	    || strcmp(syscall_name, "sysinfo") == 0
 	    || strcmp(syscall_name, "uname") == 0
 	    || strcmp(syscall_name, "nanosleep") == 0
 	    || strcmp(syscall_name, "set_tid_address") == 0
 	    || strcmp(syscall_name, "set_robust_list") == 0
 	    || strcmp(syscall_name, "sigaltstack") == 0
 	    || strcmp(syscall_name, "poll") == 0
+	    || strcmp(syscall_name, "epoll_create1") == 0
+	    || strcmp(syscall_name, "epoll_ctl") == 0
+	    || strcmp(syscall_name, "epoll_wait") == 0
+	    || strcmp(syscall_name, "ppoll") == 0
+	    || strcmp(syscall_name, "getrusage") == 0
 	    || strcmp(syscall_name, "clock_gettime") == 0
 	    || strcmp(syscall_name, "mincore") == 0
 	    || strcmp(syscall_name, "msync") == 0
 	    || strcmp(syscall_name, "prctl") == 0
-	    || strcmp(syscall_name, "kill") == 0    // untraced
-	    || strcmp(syscall_name, "getcwd") == 0  // untraced
-	    || strcmp(syscall_name, "getuid") == 0  // untraced
-	    || strcmp(syscall_name, "getppid") == 0 // untraced
+	    || strcmp(syscall_name, "kill") == 0      // untraced
+	    || strcmp(syscall_name, "tgkill") == 0    // untraced
+	    || strcmp(syscall_name, "getcwd") == 0    // untraced
+	    || strcmp(syscall_name, "getuid") == 0    // untraced
+	    || strcmp(syscall_name, "setuid") == 0    // untraced
+	    || strcmp(syscall_name, "newuname") == 0  // untraced
+	    || strcmp(syscall_name, "setgroups") == 0 // untraced
+	    || strcmp(syscall_name, "getgroups") == 0 // untraced
+	    || strcmp(syscall_name, "setgid") == 0    // untraced
+	    || strcmp(syscall_name, "getgid") == 0    // untraced
+	    || strcmp(syscall_name, "getegid") == 0   // untraced
+	    || strcmp(syscall_name, "getppid") == 0   // untraced
 	    || strcmp(syscall_name, "unknown") == 0) {
 		if (strcmp(syscall_name, "wait4") == 0 && !isUmaskInitialized) {
 			isUmaskInitialized = true;

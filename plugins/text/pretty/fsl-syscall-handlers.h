@@ -90,5 +90,7 @@ void accept_syscall_handler(long *args, void **v_args);
 void connect_syscall_handler(long *args, void **v_args);
 void setsockopt_syscall_handler(long *args, void **v_args);
 void getsockopt_syscall_handler(long *args, void **v_args);
+void shutdown_syscall_handler(long *args, void **v_args);
+void socketpair_syscall_handler(long *args, void **v_args);
 
 #endif
