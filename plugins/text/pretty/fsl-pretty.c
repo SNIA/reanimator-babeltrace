@@ -105,6 +105,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("pread64", &pread_syscall_handler)
 	ADD_SYSCALL_HANDLER("pwrite64", &pwrite_syscall_handler)
 	ADD_SYSCALL_HANDLER("chdir", &chdir_syscall_handler)
+	ADD_SYSCALL_HANDLER("chroot", &chroot_syscall_handler)
 	ADD_SYSCALL_HANDLER("mkdirat", &mkdirat_syscall_handler)
 	ADD_SYSCALL_HANDLER("symlink", &symlink_syscall_handler)
 	ADD_SYSCALL_HANDLER("creat", &creat_syscall_handler)
@@ -156,7 +157,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("setsockopt", &setsockopt_syscall_handler)
 	ADD_SYSCALL_HANDLER("getsockopt", &getsockopt_syscall_handler)
 	ADD_SYSCALL_HANDLER("shutdown", &shutdown_syscall_handler)
-
+	ADD_SYSCALL_HANDLER("fchdir", &fchdir_syscall_handler);
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
@@ -394,6 +395,7 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "set_robust_list") == 0
 	    || strcmp(syscall_name, "sigaltstack") == 0
 	    || strcmp(syscall_name, "poll") == 0
+	    || strcmp(syscall_name, "epoll_create") == 0
 	    || strcmp(syscall_name, "epoll_create1") == 0
 	    || strcmp(syscall_name, "epoll_ctl") == 0
 	    || strcmp(syscall_name, "epoll_wait") == 0

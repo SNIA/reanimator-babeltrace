@@ -515,6 +515,13 @@ void chdir_syscall_handler(long *args, void **v_args)
 	v_args[0] = filename->data;
 }
 
+void chroot_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(filename, "filename");
+	args[0] = get_value_for_args(filename);
+	v_args[0] = filename->data;
+}
+
 void mkdirat_syscall_handler(long *args, void **v_args)
 {
 	READ_SYSCALL_ARG(dfd, "dfd");
@@ -578,6 +585,12 @@ void fchmod_syscall_handler(long *args, void **v_args)
 	READ_SYSCALL_ARG(mode, "mode");
 	args[0] = get_value_for_args(fd);
 	args[1] = get_value_for_args(mode);
+}
+
+void fchdir_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd");
+	args[0] = get_value_for_args(fd);
 }
 
 void unlinkat_syscall_handler(long *args, void **v_args)
@@ -709,13 +722,19 @@ void getdents_syscall_handler(long *args, void **v_args)
 
 	READ_SYSCALL_ARG(fd, "fd")
 	READ_SYSCALL_ARG(count, "count")
+	READ_SYSCALL_ARG(ret, "ret")
 	args[0] = get_value_for_args(fd);
 	args[2] = get_value_for_args(count);
 
-	READ_SYSCALL_ARG(record_id, "record_id")
-	entry_event_count = get_value_for_args(record_id);
+	if (get_value_for_args(ret) != 0) {
+		READ_SYSCALL_ARG(record_id, "record_id")
+		entry_event_count = get_value_for_args(record_id);
 
-	set_buffer(entry_event_count, args, v_args, 1, 0, "dirp");
+		set_buffer(entry_event_count, args, v_args, 1, 0, "dirp");
+	} else {
+		args[1] = 0;
+		v_args[0] = NULL;
+	}
 }
 
 void vfork_syscall_handler(long *args, void **v_args)
