@@ -158,6 +158,8 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("getsockopt", &getsockopt_syscall_handler)
 	ADD_SYSCALL_HANDLER("shutdown", &shutdown_syscall_handler)
 	ADD_SYSCALL_HANDLER("fchdir", &fchdir_syscall_handler);
+	ADD_SYSCALL_HANDLER("getsockname", &getsockname_syscall_handler);
+	ADD_SYSCALL_HANDLER("getpeername", &getpeername_syscall_handler);
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
@@ -225,6 +227,7 @@ void fsl_dump_values()
 {
 	char *syscall_name = NULL;
 	int errnoVal = 0;
+	int default_return_val = 0;
 	SyscallEvent event_type = unknown_event;
 	void *common_fields[DS_NUM_COMMON_FIELDS];
 	long args[10] = {0};
@@ -434,6 +437,10 @@ void fsl_dump_values()
 	SET_COMMON_FIELDS(DS_COMMON_FIELD_EXECUTING_PID, "tid")
 	SET_COMMON_FIELDS(DS_COMMON_FIELD_EXECUTING_TID, "tid")
 	common_fields[DS_COMMON_FIELD_ERRNO_NUMBER] = &errnoVal;
+	if (strcmp(syscall_name, "exit") == 0) {
+		common_fields[DS_COMMON_FIELD_RETURN_VALUE] =
+			&default_return_val;
+	}
 
 	syscall_handler handler =
 		g_hash_table_lookup(syscall_handler_map, syscall_name);

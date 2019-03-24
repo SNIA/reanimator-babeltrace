@@ -1484,7 +1484,6 @@ static
 int flush_buf(struct pretty_component *pretty)
 {
 	int ret = 0;
-        char new_path[512] = {0};
 
 	if (pretty->string->len == 0) {
 		goto end;
@@ -1493,11 +1492,8 @@ int flush_buf(struct pretty_component *pretty)
 	if (bt_common_is_fsl_ds_enabled()) {
 		goto end;
 	}
-#else
-	strcat(new_path, pretty->string->str);
-	strcat(new_path, ".bt");
 #endif
-	if (fwrite(new_path, pretty->string->len, 1, pretty->out) != 1) {
+	if (fwrite(pretty->string->str, pretty->string->len, 1, pretty->out) != 1) {
 		ret = -1;
 	}
 

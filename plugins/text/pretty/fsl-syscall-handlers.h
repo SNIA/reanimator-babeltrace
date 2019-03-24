@@ -94,5 +94,7 @@ void setsockopt_syscall_handler(long *args, void **v_args);
 void getsockopt_syscall_handler(long *args, void **v_args);
 void shutdown_syscall_handler(long *args, void **v_args);
 void socketpair_syscall_handler(long *args, void **v_args);
+void getsockname_syscall_handler(long *args, void **v_args);
+void getpeername_syscall_handler(long *args, void **v_args);
 
 #endif

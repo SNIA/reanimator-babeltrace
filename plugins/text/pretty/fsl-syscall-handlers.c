@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/fs.h>
+#include <sys/socket.h>
 
 extern struct GenericSyscall persistent_syscall;
 extern GHashTable *syscalls_kv_store;
@@ -790,6 +791,7 @@ void ioctl_syscall_handler(long *args, void **v_args)
 	case FS_IOC_GETVERSION:
 	case TIOCGPGRP:
 	case TIOCGWINSZ:
+	case TIOCINQ:
 	case TCGETS: {
 		set_buffer(entry_event_count, args, v_args, 2, 0, "arg");
 		break;
@@ -1055,14 +1057,42 @@ void accept_syscall_handler(long *args, void **v_args)
 	uint64_t entry_event_count = 0;
 
 	READ_SYSCALL_ARG(fd, "fd");
-	READ_SYSCALL_ARG(addrlen, "upeer_addrlen");
 	args[0] = get_value_for_args(fd);
-	args[2] = get_value_for_args(addrlen);
+	args[1] = 0;
 
 	READ_SYSCALL_ARG(record_id, "record_id")
 	entry_event_count = get_value_for_args(record_id);
 
-	set_buffer(entry_event_count, args, v_args, 1, 0, "upeer_sockaddr");
+	set_buffer(entry_event_count, args, v_args, 2, 0, "upeer_addrlen");
+}
+
+void getsockname_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	args[0] = get_value_for_args(fd);
+	args[1] = 0;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 0, "upeer_addrlen");
+}
+
+void getpeername_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd");
+	args[0] = get_value_for_args(fd);
+	args[1] = 0;
+	args[2] = 0;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 2, 0, "upeer_addrlen");
 }
 
 void connect_syscall_handler(long *args, void **v_args)
