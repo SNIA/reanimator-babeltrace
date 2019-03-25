@@ -14,6 +14,7 @@ extern uint64_t event_count;
 static GHashTable *lookahead_cache = NULL;
 static void *buffer_ptr = NULL;
 
+#define F_SET_RW_HINT 1030
 #define READ_SYSCALL_ARG(param, key)                                           \
 	SyscallArgument *param = NULL;                                         \
 	{                                                                      \
@@ -706,14 +707,20 @@ void fcntl_syscall_handler(long *args, void **v_args)
 	args[0] = get_value_for_args(fd);
 	args[1] = get_value_for_args(cmd);
 
-	if (args[1] == F_SETLK || args[1] == F_SETLKW || args[1] == F_GETLK) {
+	READ_SYSCALL_ARG(arg, "arg")
+
+	switch (args[1]) {
+	case F_SETLK:
+	case F_SETLKW:
+	case F_GETLK: {
 		READ_SYSCALL_ARG(record_id, "record_id")
 		entry_event_count = get_value_for_args(record_id);
-
 		set_buffer(entry_event_count, args, v_args, 2, 0, "arg");
-	} else {
-		READ_SYSCALL_ARG(arg, "arg")
+		break;
+	}
+	default:
 		args[2] = get_value_for_args(arg);
+		break;
 	}
 }
 
