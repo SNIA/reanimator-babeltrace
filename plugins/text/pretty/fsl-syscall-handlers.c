@@ -1167,6 +1167,14 @@ void shutdown_syscall_handler(long *args, void **v_args)
 	args[1] = get_value_for_args(how);
 }
 
+static int continuation_number = -1;
+void execve_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(filename, "filename")
+	v_args[0] = &continuation_number;
+	v_args[1] = filename->data;
+}
+
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,
 		       uint64_t args_idx, uint64_t v_args_idx, char *arg_name)
 {

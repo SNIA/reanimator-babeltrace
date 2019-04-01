@@ -160,6 +160,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("fchdir", &fchdir_syscall_handler);
 	ADD_SYSCALL_HANDLER("getsockname", &getsockname_syscall_handler);
 	ADD_SYSCALL_HANDLER("getpeername", &getpeername_syscall_handler);
+	ADD_SYSCALL_HANDLER("execve", &execve_syscall_handler);
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
@@ -345,8 +346,7 @@ void fsl_dump_values()
 	// TODO(Umit) clock_gettime? do we have to support
 	// TODO(Umit) finish all these call implementations
 	// TODO(Umit) look at unknown syscalls
-	if (strcmp(syscall_name, "execve") == 0		 // have to fix
-	    || strcmp(syscall_name, "getrlimit") == 0    // have to fix
+	if (strcmp(syscall_name, "getrlimit") == 0       // have to fix
 	    || strcmp(syscall_name, "getsockname") == 0  // have to fix
 	    || strcmp(syscall_name, "recvmsg") == 0      // have to fix
 	    || strcmp(syscall_name, "recvfrom") == 0     // have to fix
