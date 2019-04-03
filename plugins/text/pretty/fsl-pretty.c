@@ -161,6 +161,8 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("getsockname", &getsockname_syscall_handler);
 	ADD_SYSCALL_HANDLER("getpeername", &getpeername_syscall_handler);
 	ADD_SYSCALL_HANDLER("execve", &execve_syscall_handler);
+	ADD_SYSCALL_HANDLER("epoll_create", &epoll_create_syscall_handler);
+	ADD_SYSCALL_HANDLER("epoll_create1", &epoll_create1_syscall_handler);
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
@@ -398,8 +400,6 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "set_robust_list") == 0
 	    || strcmp(syscall_name, "sigaltstack") == 0
 	    || strcmp(syscall_name, "poll") == 0
-	    || strcmp(syscall_name, "epoll_create") == 0
-	    || strcmp(syscall_name, "epoll_create1") == 0
 	    || strcmp(syscall_name, "epoll_ctl") == 0
 	    || strcmp(syscall_name, "epoll_wait") == 0
 	    || strcmp(syscall_name, "ppoll") == 0

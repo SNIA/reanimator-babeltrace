@@ -1059,18 +1059,15 @@ void listen_syscall_handler(long *args, void **v_args)
 	args[1] = get_value_for_args(backlog);
 }
 
+size_t upeer_addrlen;
 void accept_syscall_handler(long *args, void **v_args)
 {
-	uint64_t entry_event_count = 0;
-
 	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(addrlen, "upeer_addrlen");
 	args[0] = get_value_for_args(fd);
 	args[1] = 0;
-
-	READ_SYSCALL_ARG(record_id, "record_id")
-	entry_event_count = get_value_for_args(record_id);
-
-	set_buffer(entry_event_count, args, v_args, 2, 0, "upeer_addrlen");
+	args[2] = get_value_for_args(addrlen);
+	v_args[0] = addrlen->data;
 }
 
 void getsockname_syscall_handler(long *args, void **v_args)
@@ -1173,6 +1170,18 @@ void execve_syscall_handler(long *args, void **v_args)
 	READ_SYSCALL_ARG(filename, "filename")
 	v_args[0] = &continuation_number;
 	v_args[1] = filename->data;
+}
+
+void epoll_create_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(size, "size")
+	args[0] = get_value_for_args(size);
+}
+
+void epoll_create1_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(flags, "flags")
+	args[0] = get_value_for_args(flags);
 }
 
 static void set_buffer(uint64_t entry_event_count, long *args, void **v_args,

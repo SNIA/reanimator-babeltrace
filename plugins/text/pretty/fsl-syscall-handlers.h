@@ -97,5 +97,7 @@ void socketpair_syscall_handler(long *args, void **v_args);
 void getsockname_syscall_handler(long *args, void **v_args);
 void getpeername_syscall_handler(long *args, void **v_args);
 void execve_syscall_handler(long *args, void **v_args);
+void epoll_create_syscall_handler(long *args, void **v_args);
+void epoll_create1_syscall_handler(long *args, void **v_args);
 
 #endif
