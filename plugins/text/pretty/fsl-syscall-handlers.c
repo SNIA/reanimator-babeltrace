@@ -698,6 +698,16 @@ void dup2_syscall_handler(long *args, void **v_args)
 	args[1] = get_value_for_args(newfd);
 }
 
+void dup3_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(oldfd, "oldfd")
+	READ_SYSCALL_ARG(newfd, "newfd")
+	READ_SYSCALL_ARG(flags, "flags")
+	args[0] = get_value_for_args(oldfd);
+	args[1] = get_value_for_args(newfd);
+	args[2] = get_value_for_args(flags);
+}
+
 void fcntl_syscall_handler(long *args, void **v_args)
 {
 	uint64_t entry_event_count = 0;
@@ -1059,7 +1069,6 @@ void listen_syscall_handler(long *args, void **v_args)
 	args[1] = get_value_for_args(backlog);
 }
 
-size_t upeer_addrlen;
 void accept_syscall_handler(long *args, void **v_args)
 {
 	READ_SYSCALL_ARG(fd, "fd");
@@ -1067,6 +1076,18 @@ void accept_syscall_handler(long *args, void **v_args)
 	args[0] = get_value_for_args(fd);
 	args[1] = 0;
 	args[2] = get_value_for_args(addrlen);
+	v_args[0] = addrlen->data;
+}
+
+void accept4_syscall_handler(long *args, void **v_args)
+{
+	READ_SYSCALL_ARG(fd, "fd");
+	READ_SYSCALL_ARG(addrlen, "upeer_addrlen");
+	READ_SYSCALL_ARG(flags, "flags");
+	args[0] = get_value_for_args(fd);
+	args[1] = 0;
+	args[2] = get_value_for_args(addrlen);
+	args[3] = get_value_for_args(flags);
 	v_args[0] = addrlen->data;
 }
 

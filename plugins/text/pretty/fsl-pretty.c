@@ -123,6 +123,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("pipe", &pipe_syscall_handler)
 	ADD_SYSCALL_HANDLER("dup", &dup_syscall_handler)
 	ADD_SYSCALL_HANDLER("dup2", &dup2_syscall_handler)
+	ADD_SYSCALL_HANDLER("dup3", &dup3_syscall_handler)
 	ADD_SYSCALL_HANDLER("fcntl", &fcntl_syscall_handler)
 	ADD_SYSCALL_HANDLER("getdents", &getdents_syscall_handler)
 	ADD_SYSCALL_HANDLER("vfork", &vfork_syscall_handler)
@@ -153,6 +154,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("bind", &bind_syscall_handler)
 	ADD_SYSCALL_HANDLER("listen", &listen_syscall_handler)
 	ADD_SYSCALL_HANDLER("accept", &accept_syscall_handler)
+	ADD_SYSCALL_HANDLER("accept4", &accept_syscall_handler)
 	ADD_SYSCALL_HANDLER("connect", &connect_syscall_handler)
 	ADD_SYSCALL_HANDLER("setsockopt", &setsockopt_syscall_handler)
 	ADD_SYSCALL_HANDLER("getsockopt", &getsockopt_syscall_handler)
@@ -408,6 +410,8 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "mincore") == 0
 	    || strcmp(syscall_name, "msync") == 0
 	    || strcmp(syscall_name, "prctl") == 0
+	    || strcmp(syscall_name, "personality") == 0
+	    || strcmp(syscall_name, "semget") == 0
 	    || strcmp(syscall_name, "kill") == 0      // untraced
 	    || strcmp(syscall_name, "tgkill") == 0    // untraced
 	    || strcmp(syscall_name, "getcwd") == 0    // untraced
@@ -450,6 +454,7 @@ void fsl_dump_values()
 		       syscall_name);
 		assert(0);
 	}
+
 	handler(args, &(v_args[0]));
 
 	bt_common_write_record(ds_module, syscall_name, args, common_fields,
