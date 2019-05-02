@@ -355,6 +355,8 @@ void fsl_dump_values()
 	    || strcmp(syscall_name, "recvmsg") == 0      // have to fix
 	    || strcmp(syscall_name, "recvfrom") == 0     // have to fix
 	    || strcmp(syscall_name, "sendto") == 0       // have to fix
+	    || strcmp(syscall_name, "prlimit64") == 0    // have to fix
+	    || strcmp(syscall_name, "getdents64") == 0   // have to fix
 	    || strcmp(syscall_name, "shmget") == 0       // ??
 	    || strcmp(syscall_name, "shmctl") == 0       // ??
 	    || strcmp(syscall_name, "shmat") == 0	// ??
@@ -450,8 +452,8 @@ void fsl_dump_values()
 		g_hash_table_lookup(syscall_handler_map, syscall_name);
 
 	if (handler == NULL) {
-		printf("%s handler has not implemented yet !!!\n",
-		       syscall_name);
+		fprintf(stderr, "%s handler has not implemented yet !!!\n",
+			syscall_name);
 		assert(0);
 	}
 
