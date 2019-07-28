@@ -165,6 +165,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("execve", &execve_syscall_handler);
 	ADD_SYSCALL_HANDLER("epoll_create", &epoll_create_syscall_handler);
 	ADD_SYSCALL_HANDLER("epoll_create1", &epoll_create1_syscall_handler);
+	ADD_SYSCALL_HANDLER("mmappread", &mmappread_syscall_handler);
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
@@ -233,6 +234,7 @@ void fsl_dump_values()
 	char *syscall_name = NULL;
 	int errnoVal = 0;
 	int default_return_val = 0;
+	int default_mmap_retval = 4096;
 	SyscallEvent event_type = unknown_event;
 	void *common_fields[DS_NUM_COMMON_FIELDS];
 	long args[10] = {0};
@@ -248,17 +250,18 @@ void fsl_dump_values()
 
 	event_type = syscall_event_type(syscall_name_full);
 
-	if (event_type == mm_filemap_event) {
-		gpointer record_id = g_hash_table_lookup(
-			persistent_syscall.key_value, "fsl_record_id");
-		if (record_id != NULL) {
-			insert_value_to_hash_table(
-				"record_id", copy_syscall_argument(record_id));
-			g_hash_table_remove(persistent_syscall.key_value,
-					    "fsl_record_id");
-		}
-		return;
-	}
+	/* if (event_type == mm_filemap_event) { */
+	/* 	gpointer record_id = g_hash_table_lookup( */
+	/* 		persistent_syscall.key_value, "fsl_record_id"); */
+	/* 	if (record_id != NULL) { */
+	/* 		insert_value_to_hash_table( */
+	/* 			"record_id", copy_syscall_argument(record_id));
+	 */
+	/* 		g_hash_table_remove(persistent_syscall.key_value, */
+	/* 				    "fsl_record_id"); */
+	/* 	} */
+	/* 	return; */
+	/* } */
 
 	if (!contains_thread(thread_id)) {
 		thread_ids[threads_idx] = thread_id;
@@ -279,6 +282,34 @@ void fsl_dump_values()
 		CLEANUP_THREAD_LOCAL_SYSCALL()
 		CLEANUP_SYSCALL()
 		return;
+	}
+	case mm_filemap_event: {
+		syscall_name = "mmappread";
+		gpointer timestamp = g_hash_table_lookup(
+			persistent_syscall.key_value, "timestamp");
+		if (timestamp != NULL) {
+			insert_value_to_hash_table(
+				"entry_timestamp",
+				copy_syscall_argument(timestamp));
+			insert_value_to_hash_table(
+				"exit_timestamp",
+				copy_syscall_argument(timestamp));
+			g_hash_table_remove(persistent_syscall.key_value,
+					    "timestamp");
+		}
+
+		gpointer record_id = g_hash_table_lookup(
+			persistent_syscall.key_value, "fsl_record_id");
+		if (record_id != NULL) {
+			insert_value_to_hash_table(
+				"record_id", copy_syscall_argument(record_id));
+			g_hash_table_remove(persistent_syscall.key_value,
+					    "fsl_record_id");
+		}
+
+		g_hash_table_foreach(persistent_syscall.key_value,
+				     &copy_syscall, thread_kv_store);
+		break;
 	}
 	case entry_event: {
 		gpointer timestamp = g_hash_table_lookup(
@@ -459,6 +490,10 @@ void fsl_dump_values()
 	if (strcmp(syscall_name, "exit") == 0) {
 		common_fields[DS_COMMON_FIELD_RETURN_VALUE] =
 			&default_return_val;
+	}
+	if (strcmp(syscall_name, "mmappread") == 0) {
+		common_fields[DS_COMMON_FIELD_RETURN_VALUE] =
+			&default_mmap_retval;
 	}
 
 	syscall_handler handler =

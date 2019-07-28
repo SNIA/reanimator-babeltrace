@@ -472,6 +472,24 @@ void readahead_syscall_handler(long *args, void **v_args)
 	args[2] = get_value_for_args(count);
 }
 
+void mmappread_syscall_handler(long *args, void **v_args)
+{
+	uint64_t entry_event_count = 0;
+
+	READ_SYSCALL_ARG(fd, "fd")
+	args[0] = get_value_for_args(fd);
+
+        args[2] = 4096;
+
+	READ_SYSCALL_ARG(pos, "index")
+	args[3] = get_value_for_args(pos) * 4096;
+
+	READ_SYSCALL_ARG(record_id, "record_id")
+	entry_event_count = get_value_for_args(record_id);
+
+	set_buffer(entry_event_count, args, v_args, 1, 0, "buf");
+}
+
 void pread_syscall_handler(long *args, void **v_args)
 {
 	uint64_t entry_event_count = 0;
