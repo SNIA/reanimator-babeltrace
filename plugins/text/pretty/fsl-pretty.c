@@ -250,18 +250,22 @@ void fsl_dump_values()
 
 	event_type = syscall_event_type(syscall_name_full);
 
-	/* if (event_type == mm_filemap_event) { */
-	/* 	gpointer record_id = g_hash_table_lookup( */
-	/* 		persistent_syscall.key_value, "fsl_record_id"); */
-	/* 	if (record_id != NULL) { */
-	/* 		insert_value_to_hash_table( */
-	/* 			"record_id", copy_syscall_argument(record_id));
-	 */
-	/* 		g_hash_table_remove(persistent_syscall.key_value, */
-	/* 				    "fsl_record_id"); */
-	/* 	} */
-	/* 	return; */
-	/* } */
+	if (event_type == mm_filemap_event) {
+		if (strcmp(syscall_name_full, "mm_filemap_add_to_page_cache")
+		    == 0) {
+			gpointer record_id = g_hash_table_lookup(
+				persistent_syscall.key_value, "fsl_record_id");
+			if (record_id != NULL) {
+				insert_value_to_hash_table(
+					"record_id",
+					copy_syscall_argument(record_id));
+				g_hash_table_remove(
+					persistent_syscall.key_value,
+					"fsl_record_id");
+			}
+			return;
+		}
+	}
 
 	if (!contains_thread(thread_id)) {
 		thread_ids[threads_idx] = thread_id;
