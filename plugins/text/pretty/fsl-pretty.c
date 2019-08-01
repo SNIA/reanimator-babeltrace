@@ -41,6 +41,7 @@
 	g_hash_table_insert(syscall_handler_map, name, func_ptr);
 
 extern DataSeriesOutputModule *ds_module;
+extern uint64_t mmappread_size;
 
 static uint64_t threads_idx = 0;
 static uint64_t thread_ids[1024];
@@ -234,7 +235,6 @@ void fsl_dump_values()
 	char *syscall_name = NULL;
 	int errnoVal = 0;
 	int default_return_val = 0;
-	int default_mmap_retval = 4096;
 	SyscallEvent event_type = unknown_event;
 	void *common_fields[DS_NUM_COMMON_FIELDS];
 	long args[10] = {0};
@@ -497,7 +497,7 @@ void fsl_dump_values()
 	}
 	if (strcmp(syscall_name, "mmappread") == 0) {
 		common_fields[DS_COMMON_FIELD_RETURN_VALUE] =
-			&default_mmap_retval;
+			&mmappread_size;
 	}
 
 	syscall_handler handler =
