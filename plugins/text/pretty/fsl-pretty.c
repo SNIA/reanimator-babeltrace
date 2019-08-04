@@ -496,8 +496,7 @@ void fsl_dump_values()
 			&default_return_val;
 	}
 	if (strcmp(syscall_name, "mmappread") == 0) {
-		common_fields[DS_COMMON_FIELD_RETURN_VALUE] =
-			&mmappread_size;
+		common_fields[DS_COMMON_FIELD_RETURN_VALUE] = &mmappread_size;
 	}
 
 	syscall_handler handler =
@@ -513,6 +512,10 @@ void fsl_dump_values()
 
 	bt_common_write_record(ds_module, syscall_name, args, common_fields,
 			       v_args);
+
+	if (strcmp(syscall_name, "mmappread") == 0) {
+          return;
+	}
 
 	CLEANUP_THREAD_LOCAL_SYSCALL()
 	CLEANUP_SYSCALL()
