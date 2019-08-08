@@ -243,6 +243,10 @@ void fsl_dump_values()
 	uint64_t thread_id = GET_THREAD_ID();
 	uint64_t process_id = GET_PROCESS_ID();
 	struct GenericSyscall *thread_kv_store;
+	uint64_t number_of_mmappread_pages = 0;
+	uint16_t page_idx = 0;
+	uint64_t page_size = 4096;
+	char *mmappread_buf;
 
 	if (!bt_common_is_fsl_ds_enabled()) {
 		return;
@@ -496,7 +500,7 @@ void fsl_dump_values()
 			&default_return_val;
 	}
 	if (strcmp(syscall_name, "mmappread") == 0) {
-		common_fields[DS_COMMON_FIELD_RETURN_VALUE] = &mmappread_size;
+		common_fields[DS_COMMON_FIELD_RETURN_VALUE] = &page_size;
 	}
 
 	syscall_handler handler =
@@ -510,12 +514,22 @@ void fsl_dump_values()
 
 	handler(args, &(v_args[0]));
 
+	if (strcmp(syscall_name, "mmappread") == 0) {
+		number_of_mmappread_pages = mmappread_size / 4096;
+		mmappread_buf = ((char *)v_args[0]);
+		for (page_idx = 0; page_idx < number_of_mmappread_pages;
+		     ++page_idx) {
+			bt_common_write_record(ds_module, syscall_name, args,
+					       common_fields, v_args);
+			args[3] += page_size;
+			mmappread_buf += page_size;
+			v_args[0] = (void *)mmappread_buf;
+		}
+		return;
+	}
+
 	bt_common_write_record(ds_module, syscall_name, args, common_fields,
 			       v_args);
-
-	if (strcmp(syscall_name, "mmappread") == 0) {
-          return;
-	}
 
 	CLEANUP_THREAD_LOCAL_SYSCALL()
 	CLEANUP_SYSCALL()
