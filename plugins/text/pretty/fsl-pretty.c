@@ -41,7 +41,7 @@
 	g_hash_table_insert(syscall_handler_map, name, func_ptr);
 
 extern DataSeriesOutputModule *ds_module;
-extern uint64_t mmappread_size;
+extern uint64_t mmappread_size, mmappwrite_size;
 
 static uint64_t threads_idx = 0;
 static uint64_t thread_ids[1024];
@@ -167,6 +167,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("epoll_create", &epoll_create_syscall_handler);
 	ADD_SYSCALL_HANDLER("epoll_create1", &epoll_create1_syscall_handler);
 	ADD_SYSCALL_HANDLER("mmappread", &mmappread_syscall_handler);
+	ADD_SYSCALL_HANDLER("mmappwrite", &mmappwrite_syscall_handler);
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
@@ -292,6 +293,7 @@ void fsl_dump_values()
 		return;
 	}
 	case writeback_event: {
+		syscall_name = "mmappwrite";
 		gpointer timestamp = g_hash_table_lookup(
 			persistent_syscall.key_value, "timestamp");
 		if (timestamp != NULL) {
@@ -313,7 +315,13 @@ void fsl_dump_values()
 			g_hash_table_remove(persistent_syscall.key_value,
 					    "fsl_record_id");
 		}
-		return;
+		if (strcmp(syscall_name_full, "writeback_dirty_page") == 0) {
+			return;
+		}
+
+		g_hash_table_foreach(persistent_syscall.key_value,
+				     &copy_syscall, thread_kv_store);
+		break;
 	}
 	case mm_filemap_event: {
 		syscall_name = "mmappread";
@@ -528,7 +536,8 @@ void fsl_dump_values()
 		common_fields[DS_COMMON_FIELD_RETURN_VALUE] =
 			&default_return_val;
 	}
-	if (strcmp(syscall_name, "mmappread") == 0) {
+	if (strcmp(syscall_name, "mmappread") == 0
+	    || strcmp(syscall_name, "mmappwrite") == 0) {
 		common_fields[DS_COMMON_FIELD_RETURN_VALUE] = &page_size;
 	}
 
