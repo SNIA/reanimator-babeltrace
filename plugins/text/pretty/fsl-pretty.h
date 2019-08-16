@@ -22,6 +22,7 @@ enum syscall_event_type {
 	entry_event,
 	exit_event,
         mm_filemap_event,
+        writeback_event,
 	unknown_event
 } events;
 typedef enum syscall_event_type SyscallEvent;

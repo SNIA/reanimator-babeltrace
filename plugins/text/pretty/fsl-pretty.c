@@ -291,6 +291,30 @@ void fsl_dump_values()
 		CLEANUP_SYSCALL()
 		return;
 	}
+	case writeback_event: {
+		gpointer timestamp = g_hash_table_lookup(
+			persistent_syscall.key_value, "timestamp");
+		if (timestamp != NULL) {
+			insert_value_to_hash_table(
+				"entry_timestamp",
+				copy_syscall_argument(timestamp));
+			insert_value_to_hash_table(
+				"exit_timestamp",
+				copy_syscall_argument(timestamp));
+			g_hash_table_remove(persistent_syscall.key_value,
+					    "timestamp");
+		}
+
+		gpointer record_id = g_hash_table_lookup(
+			persistent_syscall.key_value, "fsl_record_id");
+		if (record_id != NULL) {
+			insert_value_to_hash_table(
+				"record_id", copy_syscall_argument(record_id));
+			g_hash_table_remove(persistent_syscall.key_value,
+					    "fsl_record_id");
+		}
+		return;
+	}
 	case mm_filemap_event: {
 		syscall_name = "mmappread";
 		gpointer timestamp = g_hash_table_lookup(
@@ -313,6 +337,11 @@ void fsl_dump_values()
 				"record_id", copy_syscall_argument(record_id));
 			g_hash_table_remove(persistent_syscall.key_value,
 					    "fsl_record_id");
+		}
+
+		if (strcmp(syscall_name_full, "mm_filemap_add_to_page_cache")
+		    == 0) {
+			return;
 		}
 
 		g_hash_table_foreach(persistent_syscall.key_value,
@@ -661,6 +690,9 @@ syscall_event_type(char *event_name)
 		return mm_filemap_event;
 	}
 
+	if (strstr(event_name, "writeback")) {
+		return writeback_event;
+	}
 	printf("%s\n", event_name);
 	assert(0);
 }
