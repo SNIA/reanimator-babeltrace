@@ -502,7 +502,7 @@ void mmappwrite_syscall_handler(long *args, void **v_args)
 {
 	uint64_t entry_event_count = 0;
 
-	READ_SYSCALL_ARG(fd, "fd")
+	READ_SYSCALL_ARG(fd, "file_desc")
 	args[0] = get_value_for_args(fd);
 
 	args[2] = 4096;
