@@ -490,6 +490,9 @@ void mmappread_syscall_handler(long *args, void **v_args)
 	READ_SYSCALL_ARG(pos, "index")
 	args[3] = get_value_for_args(pos) * 4096;
 
+	READ_SYSCALL_ARG(address, "addr")
+	args[4] = get_value_for_args(address);
+
 	READ_SYSCALL_ARG(record_id, "record_id")
 	entry_event_count = get_value_for_args(record_id);
 
