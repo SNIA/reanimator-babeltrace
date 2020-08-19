@@ -368,13 +368,17 @@ PKG_CHECK_MODULES([POPT], [popt],
 AC_SUBST(POPT_LIBS)
 
 
-##                 ##
-## User variables  ##
-##                 ##
+##                ##
+## User variables ##
+##                ##
 
 AC_ARG_VAR([PYTHON_INCLUDE], [Include flags for Python, bypassing python-config])
 AC_ARG_VAR([PYTHON_LIBS], [Library flags for Python, bypassing python-config])
 AC_ARG_VAR([PYTHON_CONFIG], [Path to python-config])
+
+# STRACE2DS: Location of strace2ds library
+AC_ARG_VAR([STRACE2DS], [Path to strace2ds library])
+AS_IF([test "x$STRACE2DS" = x], [STRACE2DS='/usr/local/strace2ds'])
 
 # PLUGINSDIR: Plugins directory
 AC_ARG_VAR([PLUGINSDIR], [built-in plugins install directory [LIBDIR/babeltrace/plugins]])
@@ -395,9 +399,9 @@ AS_IF([test "$BABELTRACE_MINIMAL_LOG_LEVEL" != "VERBOSE" && \
 AC_DEFINE_UNQUOTED([BT_LOG_LEVEL], [BT_LOG_$BABELTRACE_MINIMAL_LOG_LEVEL], [Minimal log level])
 
 
-##                              ##
-## Optionnal features selection ##
-##                              ##
+##                             ##
+## Optional features selection ##
+##                             ##
 
 # Python bindings
 # Disabled by default
@@ -660,11 +664,11 @@ AC_SUBST(LIBDIR)
 
 
 # Set global CFLAGS in AM_CFLAGS
-AM_CFLAGS="-Wall -Wformat $PTHREAD_CFLAGS $GLIB_CFLAGS -L\$(STRACE2DS)/lib/"
+AM_CFLAGS="-Wall -Wformat $PTHREAD_CFLAGS $GLIB_CFLAGS -L$(STRACE2DS)/lib/"
 AC_SUBST(AM_CFLAGS)
 
 # Set global CPPFLAGS in AM_CPPFLAGS
-AM_CPPFLAGS="-I\$(top_builddir)/include -I\$(top_srcdir)/include -I\$(STRACE2DS)/include -include config.h"
+AM_CPPFLAGS="-I\$(top_builddir)/include -I\$(top_srcdir)/include -I$(STRACE2DS)/include -include config.h"
 AC_SUBST(AM_CPPFLAGS)
 
 # Add glib to global link libs
