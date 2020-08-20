@@ -36,9 +36,9 @@ void bt_common_init_dataseries(char *ds_fname)
 		ds_module = ds_create_module(ds_fname, tab_path, xml_path);
 		if (!ds_module) {
 			printf("create_ds_module failed"
-					   "fname=\"%s\" table_path=\"%s\" "
-					   "xml_path=\"%s\" ",
-					   ds_fname, tab_path, xml_path);
+				"fname=\"%s\" table_path=\"%s\" "
+				"xml_path=\"%s\" ",
+				ds_fname, tab_path, xml_path);
 		}
 	}
 }
