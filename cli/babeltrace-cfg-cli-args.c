@@ -34,6 +34,7 @@
 #include <inttypes.h>
 #include <babeltrace/babeltrace.h>
 #include <babeltrace/common-internal.h>
+#include <babeltrace/fsl-common-internal.h>
 #include <babeltrace/values.h>
 #include <popt.h>
 #include <glib.h>
@@ -4828,6 +4829,8 @@ char log_level_from_arg(const char *arg)
 	return level;
 }
 
+char *program_invocation_name;
+
 struct bt_config *bt_config_cli_args_create(int argc, const char *argv[],
 		int *retcode, bool force_omit_system_plugin_path,
 		bool force_omit_home_plugin_path,
@@ -4839,6 +4842,10 @@ struct bt_config *bt_config_cli_args_create(int argc, const char *argv[],
 	int command_argc = -1;
 	const char *command_name = NULL;
 	char log_level = 'U';
+
+	char default_program_name[] = "babeltrace";
+	program_invocation_name = 
+		(argc > 0 && argv[0] && *argv[0]) ? argv[0] : default_program_name;
 
 	enum command_type {
 		COMMAND_TYPE_NONE = -1,
