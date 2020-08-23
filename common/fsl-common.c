@@ -18,15 +18,13 @@ void bt_common_init_dataseries(char *ds_fname)
 {
 	if (ds_fname) {
 		char ds_top[PATH_MAX] = {0};
-		char relative_path[PATH_MAX] = {0};
 		char tab_path[PATH_MAX] = {0};
 		char xml_path[PATH_MAX] = {0};
-		struct stat relative_lib_info;
-		snprintf(relative_path, PATH_MAX, "%s/%s",
-			dirname(_program_invocation_name), "../strace2ds");
-		int lib_search_return = stat(relative_path, &relative_lib_info);
-		if (lib_search_return == 0 && S_ISDIR(relative_lib_info.st_mode)) {
-			strncpy(ds_top, relative_path, PATH_MAX);
+		struct stat lib_info;
+
+		int lib_search_return = stat(STRACE2DSDIR, &lib_info);
+		if (lib_search_return == 0 && S_ISDIR(lib_info.st_mode)) {
+			strncpy(ds_top, STRACE2DSDIR, PATH_MAX);
 		} else {
 			strncpy(ds_top,  "/usr/local/strace2ds", PATH_MAX);
 		}

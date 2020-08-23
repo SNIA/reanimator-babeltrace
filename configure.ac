@@ -668,7 +668,7 @@ AC_SUBST(LIBDIR)
 AS_IF([test "x$enable_local_strace2ds" = xyes], [strace2dsdir=$(readlink -f ..)/strace2ds], [strace2dsdir=/usr/local/strace2ds])
 
 # Set global CFLAGS in AM_CFLAGS
-AM_CFLAGS="-Wall -Wformat $PTHREAD_CFLAGS $GLIB_CFLAGS -L$strace2dsdir/lib/"
+AM_CFLAGS="-Wall -Wformat $PTHREAD_CFLAGS $GLIB_CFLAGS -L$strace2dsdir/lib/ -DSTRACE2DSDIR=\"$strace2dsdir\""
 AC_SUBST(AM_CFLAGS)
 
 # Set global CPPFLAGS in AM_CPPFLAGS

@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <strace2ds.h>
 
-extern const char *_program_invocation_name;
 
 BT_HIDDEN
 void bt_common_init_dataseries(char *ds_fname);
