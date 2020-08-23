@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <libgen.h>
 #include <babeltrace/babeltrace-internal.h>
 #include <babeltrace/fsl-common-internal.h>
 #include <babeltrace/compat/unistd-internal.h>
@@ -26,7 +25,7 @@ void bt_common_init_dataseries(char *ds_fname)
 		if (lib_search_return == 0 && S_ISDIR(lib_info.st_mode)) {
 			strncpy(ds_top, STRACE2DSDIR, PATH_MAX);
 		} else {
-			strncpy(ds_top,  "/usr/local/strace2ds", PATH_MAX);
+			strncpy(ds_top, "/usr/local/strace2ds", PATH_MAX);
 		}
 		snprintf(tab_path, PATH_MAX, "%s/%s", ds_top,
 			 "tables/snia_syscall_fields.table");
