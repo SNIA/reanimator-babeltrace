@@ -34,7 +34,6 @@
 #include <inttypes.h>
 #include <babeltrace/babeltrace.h>
 #include <babeltrace/common-internal.h>
-#include <babeltrace/fsl-common-internal.h>
 #include <babeltrace/values.h>
 #include <popt.h>
 #include <glib.h>
@@ -4828,7 +4827,6 @@ char log_level_from_arg(const char *arg)
 
 	return level;
 }
-
 
 struct bt_config *bt_config_cli_args_create(int argc, const char *argv[],
 		int *retcode, bool force_omit_system_plugin_path,
