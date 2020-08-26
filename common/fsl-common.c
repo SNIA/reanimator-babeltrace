@@ -1,6 +1,9 @@
 // Copyright 2019 FSL Stony Brook University
 
 #include <limits.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <babeltrace/babeltrace-internal.h>
 #include <babeltrace/fsl-common-internal.h>
 #include <babeltrace/compat/unistd-internal.h>
@@ -13,19 +16,26 @@ BT_HIDDEN
 void bt_common_init_dataseries(char *ds_fname)
 {
 	if (ds_fname) {
-		char tab_path[PATH_MAX] = {0}, xml_path[PATH_MAX] = {0};
-		const char *ds_top = getenv("STRACE2DS");
-		if (!ds_top)
-			ds_top = "/usr/local/strace2ds";
+		char ds_top[PATH_MAX] = {0};
+		char tab_path[PATH_MAX] = {0};
+		char xml_path[PATH_MAX] = {0};
+		struct stat lib_info;
+
+		int lib_search_return = stat(STRACE2DSDIR, &lib_info);
+		if (lib_search_return == 0 && S_ISDIR(lib_info.st_mode)) {
+			strncpy(ds_top, STRACE2DSDIR, PATH_MAX);
+		} else {
+			strncpy(ds_top, "/usr/local/strace2ds", PATH_MAX);
+		}
 		snprintf(tab_path, PATH_MAX, "%s/%s", ds_top,
 			 "tables/snia_syscall_fields.table");
 		snprintf(xml_path, PATH_MAX, "%s/%s", ds_top, "xml/");
 		ds_module = ds_create_module(ds_fname, tab_path, xml_path);
 		if (!ds_module) {
 			printf("create_ds_module failed"
-			       "fname=\"%s\" table_path=\"%s\" "
-			       "xml_path=\"%s\" ",
-			       ds_fname, tab_path, xml_path);
+				"fname=\"%s\" table_path=\"%s\" "
+				"xml_path=\"%s\" ",
+				ds_fname, tab_path, xml_path);
 		}
 	}
 }

@@ -368,9 +368,9 @@ PKG_CHECK_MODULES([POPT], [popt],
 AC_SUBST(POPT_LIBS)
 
 
-##                 ##
-## User variables  ##
-##                 ##
+##                ##
+## User variables ##
+##                ##
 
 AC_ARG_VAR([PYTHON_INCLUDE], [Include flags for Python, bypassing python-config])
 AC_ARG_VAR([PYTHON_LIBS], [Library flags for Python, bypassing python-config])
@@ -395,9 +395,9 @@ AS_IF([test "$BABELTRACE_MINIMAL_LOG_LEVEL" != "VERBOSE" && \
 AC_DEFINE_UNQUOTED([BT_LOG_LEVEL], [BT_LOG_$BABELTRACE_MINIMAL_LOG_LEVEL], [Minimal log level])
 
 
-##                              ##
-## Optionnal features selection ##
-##                              ##
+##                             ##
+## Optional features selection ##
+##                             ##
 
 # Python bindings
 # Disabled by default
@@ -463,6 +463,13 @@ AC_ARG_ENABLE([man-pages],
   [enable_man_pages=yes]
 )
 
+# Look for strace2ds in a local directory relative to babeltrace
+# Disabled by default
+AC_ARG_ENABLE([local-strace2ds],
+  [AC_HELP_STRING([--enable-local-strace2ds], [Use a local copy of strace2ds relative to babeltrace])],
+  [], dnl AC_ARG_ENABLE will fill local-strace2ds with the user choice
+  [enable_local_strace2ds=no]
+)
 
 # Set automake variables for optionnal feature conditionnals in Makefile.am
 AM_CONDITIONAL([ENABLE_PYTHON_BINDINGS], [test "x$enable_python_bindings" = xyes])
@@ -658,13 +665,14 @@ AS_IF([test "x$exec_prefix" = xNONE], [
 
 AC_SUBST(LIBDIR)
 
+AS_IF([test "x$enable_local_strace2ds" = xyes], [strace2dsdir=$(readlink -f ..)/strace2ds], [strace2dsdir=/usr/local/strace2ds])
 
 # Set global CFLAGS in AM_CFLAGS
-AM_CFLAGS="-Wall -Wformat $PTHREAD_CFLAGS $GLIB_CFLAGS -L\$(STRACE2DS)/lib/"
+AM_CFLAGS="-Wall -Wformat $PTHREAD_CFLAGS $GLIB_CFLAGS -L$strace2dsdir/lib/ -DSTRACE2DSDIR='\"$strace2dsdir\"'"
 AC_SUBST(AM_CFLAGS)
 
 # Set global CPPFLAGS in AM_CPPFLAGS
-AM_CPPFLAGS="-I\$(top_builddir)/include -I\$(top_srcdir)/include -I\$(STRACE2DS)/include -include config.h"
+AM_CPPFLAGS="-I\$(top_builddir)/include -I\$(top_srcdir)/include -I$strace2dsdir/include -include config.h"
 AC_SUBST(AM_CPPFLAGS)
 
 # Add glib to global link libs
