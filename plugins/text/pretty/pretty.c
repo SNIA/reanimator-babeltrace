@@ -5,6 +5,9 @@
  *
  * Copyright 2016 Jérémie Galarneau <jeremie.galarneau@efficios.com>
  * Copyright 2016 Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+ * Copyright (c) 2019 Erez Zadok
+ * Copyright (c) 2019-2020 Ibrahim Umit Akgun
+ * Copyright (c) 2020 Lukas Velikov
  *
  * Author: Jérémie Galarneau <jeremie.galarneau@efficios.com>
  *
@@ -357,7 +360,7 @@ enum bt_component_status open_output_file(struct pretty_component *pretty)
 	} else {
 		bt_common_init_dataseries(pretty->options.output_path);
 	}
-	
+
 	goto end;
 
 error:

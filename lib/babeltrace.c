@@ -4,6 +4,9 @@
  * Babeltrace Library
  *
  * Copyright 2010-2011 EfficiOS Inc. and Linux Foundation
+ * Copyright (c) 2019 Erez Zadok
+ * Copyright (c) 2019-2020 Ibrahim Umit Akgun
+ * Copyright (c) 2020 Lukas Velikov
  *
  * Author: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
  *

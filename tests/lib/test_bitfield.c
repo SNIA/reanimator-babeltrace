@@ -4,6 +4,9 @@
  * BabelTrace - bitfield test program
  *
  * Copyright 2010 - Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+ * Copyright (c) 2019 Erez Zadok
+ * Copyright (c) 2019-2020 Ibrahim Umit Akgun
+ * Copyright (c) 2020 Lukas Velikov
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
