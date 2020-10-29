@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2019 Erez Zadok
+ * Copyright (c) 2019-2020 Ibrahim Umit Akgun
+ * Copyright (c) 2020 Lukas Velikov */
+
 // Copyright 2019 FSL Stony Brook University
 
 #ifndef FSL_PRETTY
