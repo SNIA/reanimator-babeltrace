@@ -173,6 +173,7 @@ static void init_system_call_handlers()
 	ADD_SYSCALL_HANDLER("epoll_create1", &epoll_create1_syscall_handler);
 	ADD_SYSCALL_HANDLER("mmappread", &mmappread_syscall_handler);
 	ADD_SYSCALL_HANDLER("mmappwrite", &mmappwrite_syscall_handler);
+	ADD_SYSCALL_HANDLER("sync_file_range", &sync_file_range_syscall_handler);
 	buffer_file = fopen(bt_common_get_buffer_file_path(), "rb");
 }
 
