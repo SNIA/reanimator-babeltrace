@@ -1264,10 +1264,10 @@ void sync_file_range_syscall_handler(long *args, void **v_args)
 	READ_SYSCALL_ARG(offset, "offset")
 	READ_SYSCALL_ARG(nbytes, "nbytes")
 	READ_SYSCALL_ARG(flags, "flags")
-	args[0] = get_value_for_args(fd)
-	args[1] = get_value_for_args(offset)
-	args[2] = get_value_for_args(nbytes)
-	args[3] = get_value_for_args(flags)
+	args[0] = get_value_for_args(fd);
+	args[1] = get_value_for_args(offset);
+	args[2] = get_value_for_args(nbytes);
+	args[3] = get_value_for_args(flags);
 }
 
 static uint64_t set_buffer(uint64_t entry_event_count, long *args,
