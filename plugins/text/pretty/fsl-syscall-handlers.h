@@ -108,5 +108,6 @@ void epoll_create_syscall_handler(long *args, void **v_args);
 void epoll_create1_syscall_handler(long *args, void **v_args);
 void mmappread_syscall_handler(long *args, void **v_args);
 void mmappwrite_syscall_handler(long *args, void **v_args);
+void sync_file_range_syscall_handler(long *args, void **v_args);
 
 #endif
