@@ -180,8 +180,9 @@ static void init_system_call_handlers()
 __attribute__((always_inline)) inline void
 get_timestamp(struct bt_clock_value *clock_value)
 {
-	uint64_t timestamp = 0;
-	bt_clock_value_get_value(clock_value, &timestamp);
+	int64_t timestamp = 0;
+	bt_clock_value_get_value_ns_from_epoch(clock_value, &timestamp);
+	// bt_clock_value_get_value(clock_value, &timestamp);
 	SyscallArgument *argument = malloc(sizeof(SyscallArgument));
 	argument->type = Integer;
 	argument->data = malloc(sizeof(uint64_t));
